@@ -60,7 +60,7 @@ jobs:
     - name: Install Podman
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
-        apt update && apt install -y podman
+        sudo apt update && sudo apt install -y podman
 
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
