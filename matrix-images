@@ -1,0 +1,9 @@
+#!/bin/sh
+set -epC;
+
+SCRIPT_PATH="$(realpath "$1")";
+shift;
+
+for dockerfile_path in images/*/Dockerfile; do
+    DOCKERFILE_PATH="$dockerfile_path" $SCRIPT_PATH $@;
+done

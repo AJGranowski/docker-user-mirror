@@ -1,0 +1,3 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+(cd "$THIS_SCRIPT_DIR" && ./matrix-container-engine matrix-images matrix-test-suite run-test) && echo 'All test pass!' || echo 'Test failure.' >&2;

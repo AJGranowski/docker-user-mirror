@@ -1,0 +1,27 @@
+services:
+  sh:
+    build:
+      context: ./image
+      network: host
+
+    cap_add:
+      # Minimum permissions for Docker User Mirror entrypoint:
+      - CAP_SETGID # Needed to switch from root to another user.
+      - CAP_SETUID # Needed to switch from root to another user.
+      - CAP_SETPCAP # Needed to change permissions when switching users.
+      - CAP_CHOWN # Needed to write changes to /etc/gshadow and /etc/shadow.
+      - CAP_DAC_OVERRIDE # Needed for Podman.
+
+    cap_drop: [ALL]
+    entrypoint: [/entrypoint, --, sh]
+    environment:
+      CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
+
+    network_mode: none
+    volumes:
+      # Bind the current directory to the working directory inside the container.
+      - type: bind
+        source: ./
+        target: /dockerfile-user-mirror
+
+    working_dir: /dockerfile-user-mirror

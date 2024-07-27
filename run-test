@@ -1,0 +1,77 @@
+#!/bin/sh
+set -epC;
+
+# Prerequisite check
+if ! command -v realpath >/dev/null; then
+    printf '%s\n' 'realpath command not found' >&2;
+    exit 1;
+fi
+
+if [ ! -f /proc/sys/kernel/random/uuid ]; then
+    printf '%s\n' '/proc/sys/kernel/random/uuid not found' >&2;
+    exit 1;
+fi
+
+uuid() {
+    cat /proc/sys/kernel/random/uuid;
+}
+
+# Full path to this script
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/src")";
+
+# Full path to the test script
+TEST_SCRIPT_PATH="$(realpath "$1")";
+shift;
+
+if [ -z "$CONTAINER_ENGINE" ]; then
+    CONTAINER_ENGINE=docker;
+fi
+
+if [ -z "$DOCKERFILE_PATH" ]; then
+    DOCKERFILE_PATH="$(realpath "$THIS_SCRIPT_DIR/images/alpine/Dockerfile")";
+fi
+
+if [ -z "$TESTING_ENVIRONMENT_DIR" ]; then
+    TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/bin")";
+fi
+
+# Create the test namespace
+test_dir="$TESTING_ENVIRONMENT_DIR/$(uuid)";
+mkdir -p "$test_dir";
+
+# Create the image build context
+image_dir="$test_dir/image";
+mkdir -p "$image_dir";
+cp "$SRC_DIR/Dockerfile.user-mirror" "$image_dir/Dockerfile";
+cp "$DOCKERFILE_PATH" "$image_dir/Dockerfile.base-image";
+printf '\n' >> "$image_dir/Dockerfile.base-image";
+(cd "$image_dir" && sed -i -e '/#{{Dockerfile}}/{r Dockerfile.base-image' -e 'd;}' Dockerfile);
+rm "$image_dir/Dockerfile.base-image";
+cp "$SRC_DIR/entrypoint" "$image_dir";
+
+# Create the image runtime context
+cp "$THIS_SCRIPT_DIR/docker-compose.yml" "$test_dir";
+cp "$SRC_DIR/docker-user-mirror-args" "$test_dir";
+cp "$SRC_DIR/podman-user-mirror-args" "$test_dir";
+
+# Run the test
+echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $CONTAINER_ENGINE... ($(basename "$test_dir"))";
+if (cd "$test_dir" && CONTAINER_ENGINE="$CONTAINER_ENGINE" $TEST_SCRIPT_PATH $@); then
+    test_status='success';
+else
+    test_status='failure';
+fi
+
+# Remove the image
+(cd "$test_dir" && $CONTAINER_ENGINE compose down --rmi local);
+
+if [ "$test_status" != 'success' ]; then
+    false;
+fi
+
+# Remove the test namespace
+rm -rf -- "$test_dir" || sudo rm -rf -- "$test_dir";
+
+# Remove the test environment if it's empty
+rm -d -- "$TESTING_ENVIRONMENT_DIR" 2>/dev/null || true;

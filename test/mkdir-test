@@ -1,0 +1,26 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../test-utilities";
+
+$(container_build);
+$(container_run) sh -c 'mkdir dir';
+
+# Test directory exists
+if ! [ -d dir ]; then
+    printf 'directory "%s" not found\n' 'dir' >&2;
+    exit 1;
+fi
+
+# Test file ownership matches the current user
+directory_owner_uid=$(stat -c "%u" dir);
+directory_owner_gid=$(stat -c "%g" dir);
+user_uid=$(id -u);
+user_gid=$(id -g);
+if ! [ $directory_owner_uid -eq $user_uid ]; then
+    printf 'Ownership UID for "dir" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2;
+    exit 1;
+fi
+if ! [ $directory_owner_gid -eq $user_gid ]; then
+    printf 'Ownership GID for "dir" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
+    exit 1;
+fi

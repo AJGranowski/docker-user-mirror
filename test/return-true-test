@@ -1,0 +1,9 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../test-utilities";
+
+$(container_build);
+if ! $(container_run) sh -c 'true'; then
+    printf 'Expected zero exit code, got a non-zero exit code.' >&2;
+    exit 1;
+fi

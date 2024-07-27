@@ -1,0 +1,20 @@
+#!/bin/sh
+set -epC;
+
+container_build() {
+    echo $CONTAINER_ENGINE compose build;
+}
+
+container_run() {
+    echo $CONTAINER_ENGINE compose run $(container_run_args) --rm;
+}
+
+container_run_args() {
+    if [ "$CONTAINER_ENGINE" = 'docker' ]; then
+        args_script='./docker-user-mirror-args';
+    elif [ "$CONTAINER_ENGINE" = 'podman' ]; then
+        args_script='./podman-user-mirror-args';
+    fi
+
+    echo "$(. "$args_script")";
+}

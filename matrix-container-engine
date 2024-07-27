@@ -1,0 +1,18 @@
+#!/bin/sh
+set -epC;
+
+SCRIPT_PATH="$(realpath "$1")";
+shift;
+
+container_engines() {
+    if command -v docker >/dev/null; then
+        printf 'docker ';
+    fi
+    if command -v podman >/dev/null; then
+        printf 'podman ';
+    fi
+}
+
+for container_engine in $(container_engines); do
+    CONTAINER_ENGINE="$container_engine" $SCRIPT_PATH $@;
+done
