@@ -26,7 +26,16 @@ jobs:
       uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
       with:
         disable-sudo: ${{ matrix.docker-context != 'rootless' }}
-        egress-policy: audit
+        egress-policy: block
+        allowed-endpoints: >
+            auth.docker.io:443
+            dl-cdn.alpinelinux.org:443
+            download.docker.com:443
+            get.docker.com:443
+            github.com:443
+            objects.githubusercontent.com:443
+            production.cloudflare.docker.com:443
+            registry-1.docker.io:443
     
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
