@@ -1,0 +1,66 @@
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+      - "!dependabot/**"
+  pull_request:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker-context: ["rootless", "default"]
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
+      with:
+        disable-sudo: ${{ matrix.docker-context != 'rootless' }}
+        egress-policy: block
+        allowed-endpoints: >
+          auth.docker.io:443
+          coveralls.io:443
+          dl-cdn.alpinelinux.org:443
+          download.docker.com:443
+          get.docker.com:443
+          github.com:443
+          objects.githubusercontent.com:443
+          production.cloudflare.docker.com:443
+          registry-1.docker.io:443
+          registry.npmjs.org:443
+    
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+    # Maybe one day GitHub will handle this for us using path filters, but for now we need to skip all of the steps that would normally run for non-code changes ourselves.
+    # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+    - name: Detect Changed Files
+      id: changed-files
+      uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9 # v44.5.6
+      with:
+        files_yaml: |
+          paths:
+            - "**"
+            - "!*.md"
+            - "!.github/**"
+            - ".github/workflows/*.yml"
+    
+    - name: Use Rootless Docker
+      if: ${{ matrix.docker-context == 'rootless' && steps.changed-files.outputs.paths_any_changed == 'true' }}
+      uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
+
+    - name: Run Tests
+      if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
+      run: |
+        chmod +x "./ci"
+        ./ci
