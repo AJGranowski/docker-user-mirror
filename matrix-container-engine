@@ -5,10 +5,10 @@ SCRIPT_PATH="$(realpath "$1")";
 shift;
 
 container_engines() {
-    if command -v docker >/dev/null; then
+    if docker compose version >/dev/null; then
         printf 'docker ';
     fi
-    if command -v podman >/dev/null; then
+    if podman compose version >/dev/null; then
         printf 'podman ';
     fi
 }
