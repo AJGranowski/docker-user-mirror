@@ -4,6 +4,6 @@ THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 
 $(container_build);
 if $(container_run) sh -c 'false'; then
-    printf 'Expected non-zero exit code, got a zero exit code.' >&2;
+    printf 'Expected non-zero exit code, got a zero exit code.\n' >&2;
     exit 1;
 fi
