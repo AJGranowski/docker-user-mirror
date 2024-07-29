@@ -65,5 +65,5 @@ jobs:
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
-        chmod --changes +x * */*
+        chmod --changes +x * */* */*/*
         COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' ./ci
