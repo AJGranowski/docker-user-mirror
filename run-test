@@ -43,15 +43,15 @@ mkdir -p "$test_dir";
 # Create the image build context
 image_dir="$test_dir/image";
 mkdir -p "$image_dir";
-cp "$SRC_DIR/Dockerfile.user-mirror" "$image_dir/Dockerfile";
+cp "$SRC_DIR/image/Dockerfile.user-mirror" "$image_dir/Dockerfile";
 cp "$DOCKERFILE_PATH" "$image_dir/Dockerfile.base-image";
 printf '\n' >> "$image_dir/Dockerfile.base-image";
 (cd "$image_dir" && sed -i -e '/#{{Dockerfile}}/{r Dockerfile.base-image' -e 'd;}' Dockerfile);
 rm "$image_dir/Dockerfile.base-image";
-cp "$SRC_DIR/entrypoint" "$image_dir";
+cp "$SRC_DIR/image/entrypoint" "$image_dir";
 
 # Create the image runtime context
-cp "$THIS_SCRIPT_DIR/docker-compose.yml" "$test_dir";
+cp "$SRC_DIR/docker-compose.yml" "$test_dir";
 cp "$SRC_DIR/docker-user-mirror-args" "$test_dir";
 cp "$SRC_DIR/podman-user-mirror-args" "$test_dir";
 
