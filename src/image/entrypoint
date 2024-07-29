@@ -118,7 +118,7 @@ else
     echo "USER=$USER" >&3;
     echo "UID=$UID" >&3;
 
-    if [ $UID -ne 0 -a "$USER" != 'root' ]; then
+    if [ $UID -ne 0 ] && [ "$USER" != 'root' ]; then
         if id -u "$USER" >/dev/null 2>&1; then
             echo "Removing user matching $USER: $(print_user $USER)" >&3;
             if command -v userdel >/dev/null; then
