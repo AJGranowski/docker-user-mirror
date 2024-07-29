@@ -24,8 +24,8 @@ SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/src")";
 TEST_SCRIPT_PATH="$(realpath "$1")";
 shift;
 
-if [ -z "$CONTAINER_ENGINE" ]; then
-    CONTAINER_ENGINE=docker;
+if [ -z "$COMPOSE_ENGINE" ]; then
+    COMPOSE_ENGINE="docker compose";
 fi
 
 if [ -z "$DOCKERFILE_PATH" ]; then
@@ -56,15 +56,15 @@ cp "$SRC_DIR/docker-user-mirror-args" "$test_dir";
 cp "$SRC_DIR/podman-user-mirror-args" "$test_dir";
 
 # Run the test
-echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $CONTAINER_ENGINE... ($(basename "$test_dir"))";
-if (cd "$test_dir" && CONTAINER_ENGINE="$CONTAINER_ENGINE" $TEST_SCRIPT_PATH $@); then
+echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $COMPOSE_ENGINE... ($(basename "$test_dir"))";
+if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" $TEST_SCRIPT_PATH $@); then
     test_status='success';
 else
     test_status='failure';
 fi
 
 # Remove the image
-(cd "$test_dir" && $CONTAINER_ENGINE compose down --rmi local);
+(cd "$test_dir" && $COMPOSE_ENGINE down --rmi local);
 
 if [ "$test_status" != 'success' ]; then
     false;

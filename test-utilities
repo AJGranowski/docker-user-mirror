@@ -2,19 +2,19 @@
 set -epC;
 
 container_build() {
-    echo $CONTAINER_ENGINE compose build;
+    echo "$COMPOSE_ENGINE" build;
 }
 
 container_run() {
-    echo $CONTAINER_ENGINE compose run $(container_run_args) --rm;
+    echo "$COMPOSE_ENGINE" run $(container_run_args) --rm;
 }
 
 container_run_args() {
-    if [ "$CONTAINER_ENGINE" = 'docker' ]; then
-        args_script='./docker-user-mirror-args';
-    elif [ "$CONTAINER_ENGINE" = 'podman' ]; then
-        args_script='./podman-user-mirror-args';
-    fi
+    case "$COMPOSE_ENGINE" in
+        docker*) args_script='./docker-user-mirror-args' ;;
+        podman*) args_script='./podman-user-mirror-args' ;;
+        *) echo >&2 "error: unknown/unsupported compose engine '$COMPOSE_ENGINE'"; exit 1 ;;
+    esac
 
     echo "$(. "$args_script")";
 }
