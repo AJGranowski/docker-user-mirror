@@ -1,9 +1,11 @@
 <header align="center">
+    <h5 align="center">⚠️ THIS PROJECT IS A WORK IN PROGRESS ⚠️</h5>
+</header>
+
+<header align="center">
     <h1 align="center">Docker User Mirror</h1>
     <p align="center">Mirror the host user inside containers.</p>
 </header>
-
-# ⚠️ THIS PROJECT IS A WORK IN PROGRESS ⚠️
 
 ## Getting Started
 1. Append `Dockerfile.user-mirror` to your Dockerfile.
@@ -22,3 +24,6 @@ docker compose run $(./docker-user-mirror-args) --rm {service}
 podman compose build
 podman compose run $(./podman-user-mirror-args) --rm {service}
 ```
+
+## Development
+Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker compose and Podman compose (if installed).
