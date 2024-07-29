@@ -2,8 +2,8 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../test-utilities";
 
-$(container_build);
-$(container_run) sh -c 'touch file';
+eval "$(container_build)";
+eval "$(container_run) sh -c 'touch file'";
 
 # Test file exists
 if ! [ -e file ]; then

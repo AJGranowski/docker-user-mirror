@@ -1,5 +1,5 @@
 #!/bin/sh
-set -epC;
+set -eC;
 
 SCRIPT_PATH="$(realpath "$1")";
 shift;

@@ -2,8 +2,8 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../test-utilities";
 
-$(container_build);
-if $(container_run) sh -c 'false'; then
+eval "$(container_build)";
+if eval "$(container_run) sh -c 'false'"; then
     printf 'Expected non-zero exit code, got a zero exit code.\n' >&2;
     exit 1;
 fi

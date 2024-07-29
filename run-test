@@ -1,5 +1,5 @@
 #!/bin/sh
-set -epC;
+set -eC;
 
 # Prerequisite check
 if ! command -v realpath >/dev/null; then
