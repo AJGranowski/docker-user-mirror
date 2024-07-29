@@ -57,7 +57,7 @@ cp "$SRC_DIR/podman-user-mirror-args" "$test_dir";
 
 # Run the test
 echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $COMPOSE_ENGINE... ($(basename "$test_dir"))";
-if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" $TEST_SCRIPT_PATH $@); then
+if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" $TEST_SCRIPT_PATH "$@"); then
     test_status='success';
 else
     test_status='failure';

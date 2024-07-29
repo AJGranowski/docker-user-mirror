@@ -5,5 +5,5 @@ SCRIPT_PATH="$(realpath "$1")";
 shift;
 
 for test_path in test/*; do
-    $SCRIPT_PATH $test_path $@;
+    $SCRIPT_PATH $test_path "$@";
 done
