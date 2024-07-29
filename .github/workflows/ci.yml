@@ -68,5 +68,5 @@ jobs:
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
-        chmod --changes +x * */* */*/*
+        grep -e '#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
         COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' ./ci
