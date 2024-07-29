@@ -1,3 +1,7 @@
 #!/bin/sh
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-(cd "$THIS_SCRIPT_DIR" && ./matrix-compose-engine matrix-images matrix-test-suite run-test) && echo 'All test pass!' || (echo 'Test failure.' >&2 && false);
+if [ -z "$COMPOSE_ENGINE" ]; then
+    (cd "$THIS_SCRIPT_DIR" && ./matrix-compose-engine matrix-images matrix-test-suite run-test);
+else
+    (cd "$THIS_SCRIPT_DIR" && COMPOSE_ENGINE="$COMPOSE_ENGINE" ./matrix-images matrix-test-suite run-test);
+fi && echo 'All test pass!' || (echo 'Test failure.' >&2 && false);

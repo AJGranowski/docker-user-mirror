@@ -64,7 +64,7 @@ else
 fi
 
 # Remove the image
-(cd "$test_dir" && $COMPOSE_ENGINE down --rmi local);
+(cd "$test_dir" && $COMPOSE_ENGINE down --rmi local 2>/dev/null) || true;
 
 if [ "$test_status" != 'success' ]; then
     false;

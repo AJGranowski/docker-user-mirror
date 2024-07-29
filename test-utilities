@@ -5,10 +5,6 @@ container_build() {
     echo "$COMPOSE_ENGINE" build;
 }
 
-container_run() {
-    echo "$COMPOSE_ENGINE" run $(container_run_args) --rm;
-}
-
 container_run_args() {
     case "$COMPOSE_ENGINE" in
         docker*) args_script='./docker-user-mirror-args' ;;
@@ -17,4 +13,8 @@ container_run_args() {
     esac
 
     echo "$(. "$args_script")";
+}
+
+container_run() {
+    echo "$COMPOSE_ENGINE" run $(container_run_args) --rm;
 }

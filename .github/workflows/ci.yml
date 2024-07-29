@@ -59,7 +59,7 @@ jobs:
     - name: Install Podman Compose
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
-        sudo apt update && sudo apt install -y podman-compose
+        pip3 install "podman-compose==1.0.6"
 
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}

@@ -2,13 +2,13 @@
 set -eC;
 
 if docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    echo -n --env 'GID=0' '';
-    echo -n --env 'GROUP=root' '';
-    echo -n --env 'UID=0' '';
-    echo -n --env 'USER=root' '';
+    printf -- '--env GID=%s ' '0';
+    printf -- '--env GROUP=%s ' 'root';
+    printf -- '--env UID=%s ' '0';
+    printf -- '--env USER=%s ' 'root';
 else
-    echo -n --env "GID=$(id -g)" '';
-    echo -n --env "GROUP=$(id -gn)" '';
-    echo -n --env "UID=$(id -u)" '';
-    echo -n --env "USER=$(id -un)" '';
+    printf -- '--env GID=%s ' "$(id -g)";
+    printf -- '--env GROUP=%s ' "$(id -gn)";
+    printf -- '--env UID=%s ' "$(id -u)";
+    printf -- '--env USER=%s ' "$(id -un)";
 fi

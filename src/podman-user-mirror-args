@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eC;
-echo -n --env 'GID=0' '';
-echo -n --env 'GROUP=root' '';
-echo -n --env 'UID=0' '';
-echo -n --env 'USER=root' '';
+printf -- '--env GID=%s ' '0';
+printf -- '--env GROUP=%s ' 'root';
+printf -- '--env UID=%s ' '0';
+printf -- '--env USER=%s ' 'root';
