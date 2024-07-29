@@ -26,4 +26,4 @@ podman compose run $(./podman-user-mirror-args) --rm {service}
 ```
 
 ## Development
-Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker compose and Podman compose (if installed).
+Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker Compose and Podman Compose (if installed).
