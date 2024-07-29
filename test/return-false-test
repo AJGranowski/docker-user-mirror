@@ -1,6 +1,6 @@
 #!/bin/sh
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-. "$THIS_SCRIPT_DIR/../test-utilities";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
 
 eval "$(container_build)";
 if eval "$(container_run) sh -c 'false'"; then

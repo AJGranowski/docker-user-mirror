@@ -18,7 +18,7 @@ uuid() {
 
 # Full path to this script
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/src")";
+SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/../src")";
 
 # Full path to the test script
 TEST_SCRIPT_PATH="$(realpath "$1")";
@@ -29,11 +29,11 @@ if [ -z "$COMPOSE_ENGINE" ]; then
 fi
 
 if [ -z "$DOCKERFILE_PATH" ]; then
-    DOCKERFILE_PATH="$(realpath "$THIS_SCRIPT_DIR/images/alpine/Dockerfile")";
+    DOCKERFILE_PATH="$(realpath "$THIS_SCRIPT_DIR/../images/alpine/Dockerfile")";
 fi
 
 if [ -z "$TESTING_ENVIRONMENT_DIR" ]; then
-    TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/bin")";
+    TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/../bin")";
 fi
 
 # Create the test namespace
