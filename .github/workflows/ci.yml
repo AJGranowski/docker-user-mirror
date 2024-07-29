@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        docker-context: ["rootless", "default"]
+        container-context: ["docker-default", "docker-rootless", "podman"]
 
     steps:
     - name: Harden Runner
@@ -53,16 +53,17 @@ jobs:
             - ".github/workflows/*.yml"
     
     - name: Use Rootless Docker
-      if: ${{ matrix.docker-context == 'rootless' && steps.changed-files.outputs.paths_any_changed == 'true' }}
+      if: ${{ matrix.container-context == 'docker-rootless' && steps.changed-files.outputs.paths_any_changed == 'true' }}
       uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
 
     - name: Install Podman Compose
-      if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
-      run: |
-        pip3 install "podman-compose==1.0.6"
+      if: ${{ matrix.container-context == 'podman' && steps.changed-files.outputs.paths_any_changed == 'true' }}
+      # Podman in the GitHub runner is out of date, so we either need to upgrade it ourselves or install an older version of podman-compose.
+      # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
+      run: pip3 install "podman-compose==1.0.6" 
 
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
         chmod --changes +x * */*
-        ./ci
+        COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' ./ci
