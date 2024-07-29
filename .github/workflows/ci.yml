@@ -56,11 +56,6 @@ jobs:
       if: ${{ matrix.docker-context == 'rootless' && steps.changed-files.outputs.paths_any_changed == 'true' }}
       uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
 
-    - name: Install Podman
-      if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
-      run: |
-        sudo apt update && sudo apt install -y podman
-
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
