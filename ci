@@ -4,7 +4,7 @@ set -eC;
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 
 if command -v shellcheck >/dev/null; then
-    grep -e '#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning
+    grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning
 fi
 
 if [ -z "$COMPOSE_ENGINE" ]; then

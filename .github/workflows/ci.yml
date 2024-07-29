@@ -27,17 +27,17 @@ jobs:
       with:
         egress-policy: audit
         allowed-endpoints: >
-            auth.docker.io:443
-            dl-cdn.alpinelinux.org:443
-            download.docker.com:443
-            files.pythonhosted.org:443
-            get.docker.com:443
-            github.com:443
-            objects.githubusercontent.com:443
-            production.cloudflare.docker.com:443
-            pypi.org:443
-            quay.io:443
-            registry-1.docker.io:443
+          auth.docker.io:443
+          dl-cdn.alpinelinux.org:443
+          download.docker.com:443
+          files.pythonhosted.org:443
+          get.docker.com:443
+          github.com:443
+          objects.githubusercontent.com:443
+          production.cloudflare.docker.com:443
+          pypi.org:443
+          quay.io:443
+          registry-1.docker.io:443
     
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -68,5 +68,5 @@ jobs:
     - name: Run Tests
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
-        grep -e '#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
+        grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
         COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' ./ci
