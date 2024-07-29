@@ -1,5 +1,5 @@
 <header align="center">
-    <h5 align="center">⚠️ THIS PROJECT IS A WORK IN PROGRESS ⚠️</h5>
+    <h3 align="center">⚠️ THIS PROJECT IS A WORK IN PROGRESS ⚠️</h3>
 </header>
 
 <header align="center">
