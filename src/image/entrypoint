@@ -16,7 +16,7 @@ check_setpriv() {
 }
 
 print_user() {
-    cat /etc/passwd | grep "^$1:";
+    grep "^$1:" /etc/passwd
 }
 
 # Parse options
