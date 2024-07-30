@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eC;
+
+# Parse options
+while [ $# -gt 0 ]; do
+    case $1 in
+        --docker) ;;
+        --podman)
+            o_podman=true;
+            ;;
+        --)
+            shift;
+            break;
+            ;;
+        *)
+            printf 'Unknown option %s\n' $1 >&2;
+            exit 1;
+            break;
+    esac
+    shift;
+done
+
+if [ "$o_podman" = true ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
+    printf -- '--env GID=%s ' '0';
+    printf -- '--env GROUP=%s ' 'root';
+    printf -- '--env UID=%s ' '0';
+    printf -- '--env USER=%s ' 'root';
+else
+    printf -- '--env GID=%s ' "$(id -g)";
+    printf -- '--env GROUP=%s ' "$(id -gn)";
+    printf -- '--env UID=%s ' "$(id -u)";
+    printf -- '--env USER=%s ' "$(id -un)";
+fi

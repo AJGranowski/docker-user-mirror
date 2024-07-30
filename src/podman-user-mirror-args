@@ -1,6 +1,0 @@
-#!/bin/sh
-set -eC;
-printf -- '--env GID=%s ' '0';
-printf -- '--env GROUP=%s ' 'root';
-printf -- '--env UID=%s ' '0';
-printf -- '--env USER=%s ' 'root';

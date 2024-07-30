@@ -7,8 +7,8 @@ container_build() {
 
 container_run_args() {
     case "$COMPOSE_ENGINE" in
-        docker*) ./docker-user-mirror-args ;;
-        podman*) ./podman-user-mirror-args ;;
+        docker*) ./user-mirror-args --docker ;;
+        podman*) ./user-mirror-args --podman ;;
         *) printf 'Unknown/unsupported compose engine "%s"\n' "$COMPOSE_ENGINE" >&2; exit 1 ;;
     esac
 }
