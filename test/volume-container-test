@@ -4,6 +4,7 @@ THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 
 eval "$(container_build)";
 mkdir volume
-eval "$(container_run) --volume /dockerfile-user-mirror/volume/ --env CHOWN='/dockerfile-user-mirror/volume/' sh -c \
-    '[ \"\$(stat -c %u:%g ./volume/)\" = \"\$(id -u):\$(id -g)\" ] || (echo \"Permissions for ./volume/ (\$(stat -c %u:%g volume)) != UID:GID (\$(id -u):\$(id -g))\" >&2 && false)' \
-    "
+eval "$(container_run) --volume /dockerfile-user-mirror/volume/ --env CHOWN='/dockerfile-user-mirror/volume/' sh -c '\
+    [ \"\$(stat -c %u:%g ./volume/)\" = \"\$(id -u):\$(id -g)\" ] || \
+    (echo \"Permissions for ./volume/ (\$(stat -c %u:%g volume)) != UID:GID (\$(id -u):\$(id -g))\" >&2 && false) \
+    '"
