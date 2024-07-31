@@ -153,6 +153,10 @@ else
         echo "Created user: $(print_user "$USER")" >&3;
     fi
 
+    if [ -n "$CHOWN" ]; then
+        echo "$CHOWN" | xargs chown -c "$UID:$GID" >&3;
+    fi
+
     # Execute using $UID
     if check_setpriv >/dev/null 2>&1; then
         if [ -n "$CAPABILITIES" ]; then
