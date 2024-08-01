@@ -51,7 +51,7 @@ fi
 
 VOLUMES="$(get_volumes)";
 if [ -n "$VOLUMES" ]; then
-    printf -- "CHOWN='%s'" "$VOLUMES";
+    printf -- "CHOWN='%s' " "$VOLUMES";
 fi
 
 if [ "$o_podman" = true ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
