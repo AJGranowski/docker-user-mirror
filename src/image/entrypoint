@@ -118,6 +118,7 @@ else
     echo "USER=$USER" >&3;
     echo "UID=$UID" >&3;
 
+    # Create/replace user if non-root.
     if [ $UID -ne 0 ] && [ "$USER" != 'root' ]; then
         if id -u "$USER" >/dev/null 2>&1; then
             echo "Removing user matching $USER: $(print_user $USER)" >&3;
@@ -153,6 +154,7 @@ else
         echo "Created user: $(print_user "$USER")" >&3;
     fi
 
+    # Set the ownership of a set of items to the user.
     if [ -n "$CHOWN" ]; then
         echo "$CHOWN" | xargs chown -c "$UID:$GID" >&3;
     fi

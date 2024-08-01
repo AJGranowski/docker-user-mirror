@@ -2,7 +2,7 @@
 set -eC;
 
 container_build() {
-    echo "$COMPOSE_ENGINE" build;
+    echo "$COMPOSE_ENGINE build";
 }
 
 container_run_args() {
