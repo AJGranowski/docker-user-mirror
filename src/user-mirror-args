@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eC;
 
-get_volumes() {
-    if $COMPOSE_ENGINE --progress quiet create --force-recreate >/dev/null 2>&1; then
-        $CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}"{{print .Destination}}" {{end}}{{end}}' \
+get_mount_destinations() {
+    if $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1; then
+        $CONTAINER_ENGINE inspect --format '{{range .Mounts}}"{{print .Destination}}" {{end}}' \
             "$($COMPOSE_ENGINE --progress quiet ps -a --format '{{.ID}}')";
     fi
 }
@@ -49,9 +49,9 @@ else
     fi
 fi
 
-VOLUMES="$(get_volumes)";
-if [ -n "$VOLUMES" ]; then
-    printf -- "CHOWN='%s' " "$VOLUMES";
+DESTINATIONS="$(get_mount_destinations)";
+if [ -n "$DESTINATIONS" ]; then
+    printf -- "--env CHOWN='%s' " "$DESTINATIONS";
 fi
 
 if [ "$o_podman" = true ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
