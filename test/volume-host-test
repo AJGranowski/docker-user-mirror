@@ -1,0 +1,45 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+
+mv docker-compose.yml docker-compose1.yml;
+cat <<EOF > docker-compose2.yml
+services:
+  sh:
+    volumes:
+      - type: volume
+        source: volume
+        target: /dockerfile-user-mirror/volume
+volumes:
+  volume:
+EOF
+
+$COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-compose.yml;
+rm docker-compose1.yml;
+rm docker-compose2.yml;
+
+# TODO: Perform this part automatically in user-mirror-args
+mkdir volume;
+
+eval "$(container_build)";
+eval "$(container_run) sh -c 'true'"
+
+# Test directory exists
+if ! [ -d volume ]; then
+    printf 'directory "%s" not found\n' 'volume' >&2;
+    exit 1;
+fi
+
+# Test file ownership matches the current user
+directory_owner_uid=$(stat -c "%u" volume);
+directory_owner_gid=$(stat -c "%g" volume);
+user_uid=$(id -u);
+user_gid=$(id -g);
+if ! [ $directory_owner_uid -eq $user_uid ]; then
+    printf 'Ownership UID for "volume" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2;
+    exit 1;
+fi
+if ! [ $directory_owner_gid -eq $user_gid ]; then
+    printf 'Ownership GID for "volume" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
+    exit 1;
+fi
