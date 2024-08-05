@@ -1,0 +1,25 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+
+mv docker-compose.yml docker-compose1.yml;
+cat <<EOF > docker-compose2.yml
+services:
+  sh:
+    volumes:
+      - type: volume
+        source: volume
+        target: /mnt/volumes/volume/
+volumes:
+  volume:
+EOF
+
+$COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-compose.yml;
+rm docker-compose1.yml;
+rm docker-compose2.yml;
+
+eval "$(container_build)";
+eval "$(container_run) sh -c '\
+    [ \"\$(stat -c %u:%g /mnt/volumes/volume/)\" = \"\$(id -u):\$(id -g)\" ] || \
+    (echo \"Permissions for /mnt/volumes/volume/ (\$(stat -c %u:%g /mnt/volumes/volume/)) != UID:GID (\$(id -u):\$(id -g))\" >&2 && false) \
+    '"
