@@ -18,9 +18,6 @@ $COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-co
 rm docker-compose1.yml;
 rm docker-compose2.yml;
 
-# TODO: Perform this part automatically in user-mirror-args
-mkdir volume;
-
 eval "$(container_build)";
 eval "$(container_run) sh -c 'true'"
 

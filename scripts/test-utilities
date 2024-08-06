@@ -13,8 +13,6 @@ container_run_args() {
     esac
 }
 
-container_run_args >/dev/null;
-
 container_run() {
     echo "$COMPOSE_ENGINE" run "$(container_run_args)" --rm;
 }
