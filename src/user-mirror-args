@@ -34,8 +34,6 @@ else
     CONTAINER_ENGINE='docker';
     if docker compose version >/dev/null 2>&1; then
         COMPOSE_ENGINE='docker compose'
-    elif docker-compose version >/dev/null 2>&1; then
-        COMPOSE_ENGINE='docker-compose'
     else
         printf 'Could not find a Docker Compose engine.\n' >&2;
         exit 1;
