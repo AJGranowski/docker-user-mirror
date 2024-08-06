@@ -56,26 +56,39 @@ if $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1; then
             break;
         fi
 
-        mkdir -p "$create_path";
+        mkdir -p "$create_path" >/dev/null 2>&1 || true;
     done <<EOF
 $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") (ne .Mode "")}}{{println .Source}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
 EOF
-
     # Create mounts nested within bind mounts on the host.
-    while read bind_source; do
-        if [ -z "$bind_source" ]; then
+    while read edge_source; do
+        if [ -z "$edge_source" ]; then
             break;
         fi
 
-        read bind_destination;
+        read edge_destination;
 
-        while read line; do
-            translated_path="$(echo "$line" | sed -e "s|^${bind_destination}|${bind_source}|g")"
-            if [ "$translated_path" != "$line" ]; then
-                mkdir -p "$translated_path";
+        while read node_source; do
+            if [ -z "$node_source" ]; then
+                break;
+            fi
+
+            read node_destination;
+
+            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
+            if [ "$resolved_node_destination" = "$node_destination" ]; then
+                # Skip if no resolution was made
+                continue;
+            fi
+
+            if [ -f "$node_source" ]; then
+                mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true;
+                touch "$resolved_node_destination";
+            else
+                mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
             fi
         done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if ne .Type "bind"}}{{println .Destination}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
+$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$TEMP_CONTAINER_ID")
 EOF
 
     done <<EOF
