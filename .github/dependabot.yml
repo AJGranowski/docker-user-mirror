@@ -5,6 +5,26 @@
 
 version: 2
 updates:
+  - package-ecosystem: "docker"
+    directory: "/images/alpine/"
+    labels: []
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/images/busybox/"
+    labels: []
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/images/debian/"
+    labels: []
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/images/ubuntu/"
+    labels: []
+    schedule:
+      interval: "monthly"
   - package-ecosystem: "github-actions"
     directory: "/"
     labels: []
