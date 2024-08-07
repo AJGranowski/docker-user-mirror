@@ -4,6 +4,10 @@ set -eC;
 SCRIPT_PATH="$(realpath "$1")";
 shift;
 
-for dockerfile_path in images/*/Dockerfile; do
-    DOCKERFILE_PATH="$dockerfile_path" $SCRIPT_PATH "$@";
-done
+if [ -n "$DOCKERFILE_PATH" ]; then
+    $SCRIPT_PATH "$@";
+else
+    for dockerfile_path in images/*/Dockerfile; do
+        DOCKERFILE_PATH="$dockerfile_path" $SCRIPT_PATH "$@";
+    done
+fi

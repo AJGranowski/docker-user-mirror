@@ -4,14 +4,16 @@ set -eC;
 SCRIPT_PATH="$(realpath "$1")";
 shift;
 
-if docker compose version >/dev/null 2>&1; then
-    COMPOSE_ENGINE="docker compose" $SCRIPT_PATH "$@";
-elif docker-compose version >/dev/null 2>&1; then
-    COMPOSE_ENGINE="docker-compose" $SCRIPT_PATH "$@";
-fi
+if [ -n "$COMPOSE_ENGINE" ]; then
+    $SCRIPT_PATH "$@";
+else
+    if docker compose version >/dev/null 2>&1; then
+        COMPOSE_ENGINE="docker compose" $SCRIPT_PATH "$@";
+    fi
 
-if podman compose version >/dev/null 2>&1; then
-    COMPOSE_ENGINE="podman compose" $SCRIPT_PATH "$@";
-elif podman-compose version >/dev/null 2>&1; then
-    COMPOSE_ENGINE="podman-compose" $SCRIPT_PATH "$@";
+    if podman compose version >/dev/null 2>&1; then
+        COMPOSE_ENGINE="podman compose" $SCRIPT_PATH "$@";
+    elif podman-compose version >/dev/null 2>&1; then
+        COMPOSE_ENGINE="podman-compose" $SCRIPT_PATH "$@";
+    fi
 fi
