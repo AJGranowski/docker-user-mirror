@@ -66,6 +66,7 @@ jobs:
       # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
       run: |
         echo 'podman-compose == 1.0.6 --hash=sha256:48c92e6cdac1732422c6cfa803d8a905a61be4119dc0d41f9ed42c66826e9a78' > /tmp/requirements.txt
+        echo 'python-dotenv == 1.0.1 --hash=sha256=f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a' >> /tmp/requirements.txt
         pip3 install --require-hashes --requirement /tmp/requirements.txt
         rm /tmp/pip3/requirements.txt
 
