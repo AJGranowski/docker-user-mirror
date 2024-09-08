@@ -2,8 +2,8 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../scripts/test-utilities";
 
-eval "$(container_build)";
-eval "$(container_run) --volume /mnt/volumes/volume/ --env CHOWN='/mnt/volumes/volume/' sh -c '\
-    [ \"\$(stat -c %u:%g /mnt/volumes/volume/)\" = \"\$(id -u):\$(id -g)\" ] || \
-    (echo \"Permissions for /mnt/volumes/volume/ (\$(stat -c %u:%g /mnt/volumes/volume/)) != UID:GID (\$(id -u):\$(id -g))\" >&2 && false) \
-    '"
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE run --volume /mnt/volumes/volume/ --env CHOWN='/mnt/volumes/volume/' --rm sh -c '\
+    [ "$(stat -c %u:%g /mnt/volumes/volume/)" = "$(id -u):$(id -g)" ] || \
+    (echo "Permissions for /mnt/volumes/volume/ ($(stat -c %u:%g /mnt/volumes/volume/)) != UID:GID ($(id -u):$(id -g))" >&2 && false) \
+    ';

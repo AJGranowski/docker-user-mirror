@@ -2,9 +2,9 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../scripts/test-utilities";
 
-eval "$(container_build)";
+$COMPOSE_ENGINE build;
 mkdir volume
-eval "$(container_run) --volume /dockerfile-user-mirror/volume/ --env CHOWN='/dockerfile-user-mirror/volume/' sh -c 'true'"
+./user-mirror $COMPOSE_ENGINE run --rm --volume /dockerfile-user-mirror/volume/ --env CHOWN='/dockerfile-user-mirror/volume/' sh -c 'true';
 
 # Test directory exists
 if ! [ -d volume ]; then

@@ -18,8 +18,8 @@ $COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-co
 rm docker-compose1.yml;
 rm docker-compose2.yml;
 
-eval "$(container_build)";
-eval "$(container_run) sh -c 'true'"
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
 
 # Test directory exists
 if ! [ -d volume ]; then

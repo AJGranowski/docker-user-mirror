@@ -18,8 +18,8 @@ rm docker-compose2.yml;
 
 touch docker.npmrc;
 
-eval "$(container_build)";
-eval "$(container_run) sh -c 'true'"
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
 
 # Test file exists
 if ! [ -f .npmrc ]; then

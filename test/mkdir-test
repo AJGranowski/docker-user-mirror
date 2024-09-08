@@ -2,8 +2,8 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../scripts/test-utilities";
 
-eval "$(container_build)";
-eval "$(container_run) sh -c 'mkdir dir'";
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'mkdir dir';
 
 # Test directory exists
 if ! [ -d dir ]; then

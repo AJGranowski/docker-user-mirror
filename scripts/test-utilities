@@ -1,18 +1,2 @@
 #!/bin/sh
 set -eC;
-
-container_build() {
-    echo "$COMPOSE_ENGINE build";
-}
-
-container_run_args() {
-    case "$COMPOSE_ENGINE" in
-        docker*) ./user-mirror-args --docker ;;
-        podman*) ./user-mirror-args --podman ;;
-        *) printf 'Unknown/unsupported compose engine "%s"\n' "$COMPOSE_ENGINE" >&2; exit 1 ;;
-    esac
-}
-
-container_run() {
-    echo "$COMPOSE_ENGINE" run "$(container_run_args)" --rm;
-}
