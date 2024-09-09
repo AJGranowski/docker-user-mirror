@@ -56,6 +56,15 @@ if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     esac
 fi
 
+COMPOSE_FILES="";
+for arg do
+    case $arg in
+        -f|--file)
+            COMPOSE_FILES="--file $1"
+            ;;
+    esac
+done
+
 if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
     first_iteration=true;
     search_for_insert=true;
@@ -82,8 +91,8 @@ if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOpti
 else
 
     # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
-    if $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1; then
-        TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet ps -a --format '{{.ID}}')";
+    if $COMPOSE_ENGINE --progress quiet $COMPOSE_FILES create >/dev/null 2>&1; then
+        TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet $COMPOSE_FILES ps -a --format '{{.ID}}')";
 
         # Create a list of paths to chown within the container.
         CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if (ne .Mode "")}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
