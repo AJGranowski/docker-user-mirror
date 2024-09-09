@@ -86,7 +86,7 @@ else
         TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet ps -a --format '{{.ID}}')";
 
         # Create a list of paths to chown within the container.
-        DESTINATIONS="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}"{{print .Destination}}" {{end}}' "$TEMP_CONTAINER_ID")";
+        CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if (ne .Mode "")}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
 
         # Create host bind paths that where create_host_path=true.
         while read create_path; do
@@ -148,8 +148,8 @@ EOF
             case $arg in
                 create|exec|run)
                     set -- "$@" "$arg" '--env' "GID=$(id -g)" '--env' "GROUP=$(id -gn)" '--env' "UID=$(id -u)" '--env' "USER=$(id -un)";
-                    if [ -n "$DESTINATIONS" ]; then
-                        set -- "$@" '--env' "CHOWN=$DESTINATIONS";
+                    if [ -n "$CHOWN_LIST" ]; then
+                        set -- "$@" '--env' "CHOWN=$CHOWN_LIST";
                     fi
                     unset search_for_insert
                     ;;
