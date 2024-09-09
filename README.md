@@ -7,8 +7,13 @@
 
 <header align="center">
     <h1 align="center">Docker User Mirror</h1>
-    <p align="center">Mimic the behavior of rootless Docker on rootful Docker.</p>
+    <p align="center">Mirror host user ownership in rootful Docker containers.</p>
 </header>
+
+## Why?
+The goal of this project is to unify bind mount permissions, regardless of the container engine context. Whether you're using rootful Docker, rootless Docker, or Podman, this project will configure your host environment and container to ensure bind mount items are owned by the host user, not root.
+
+The primary focus of this project is to improve the developer experience of working with containerized toolchains. Rather than requiring a rootless context, you can incorporate Docker User Mirror to become context agnostic!
 
 ## Getting Started
 1. Append `Dockerfile.user-mirror` to your Dockerfile.
@@ -16,7 +21,7 @@
 3. Copy `user-mirror` to the directory of your `docker-compose.yml`.
 
 ## Usage
-The `user-mirror` script combined with the `entrypoint` script mirror the host user inside the container. This eliminates permission mismatches when bind mounting on Linux.
+The `user-mirror` script combined with the `entrypoint` script will mirror the host user inside the container. This alongside creating bind mount objects before the Docker daemon eliminates ownership mismatches when bind mounting on Linux.
 
 ```shell
 docker compose build
