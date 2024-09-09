@@ -91,8 +91,8 @@ if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOpti
 else
 
     # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
-    if $COMPOSE_ENGINE --progress quiet $COMPOSE_FILES create >/dev/null 2>&1; then
-        TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet $COMPOSE_FILES ps -a --format '{{.ID}}')";
+    if $COMPOSE_ENGINE --progress quiet $COMPOSE_FILES create >/dev/null; then
+        TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet $COMPOSE_FILES ps -a --status created --format '{{.ID}}')";
 
         # Create a list of paths to chown within the container.
         CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if (ne .Mode "")}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
