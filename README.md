@@ -14,7 +14,8 @@ The primary focus of this project is to improve the developer experience of work
 ## Getting Started
 1. Append `Dockerfile.user-mirror` to your Dockerfile.
 2. Copy `entrypoint` to the directory of your Dockerfile.
-3. Copy `user-mirror` to the directory of your `docker-compose.yml`.
+3. Merge `docker-compose.yml` with your existing `docker-compose.yml` (`cap_add`, `cap_drop`, `entrypoint`, `environment`).
+4. Copy `user-mirror` to the directory of your `docker-compose.yml`.
 
 ## Usage
 The `user-mirror` script combined with the `entrypoint` script will mirror the host user inside the container. This alongside creating bind mount objects before the Docker daemon eliminates ownership mismatches when bind mounting on Linux.
