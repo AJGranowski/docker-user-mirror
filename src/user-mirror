@@ -81,15 +81,15 @@ for arg do
 done
 
 if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    GROUP='root';
-    GID=0;
-    USER='root';
-    UID=0;
+    HOST_MAPPED_GROUP='root';
+    HOST_MAPPED_GID=0;
+    HOST_MAPPED_USER='root';
+    HOST_MAPPED_UID=0;
 else
-    GROUP="$(id -gn)";
-    GID="$(id -g)";
-    USER="$(id -un)";
-    UID="$(id -u)";
+    HOST_MAPPED_GROUP="$(id -gn)";
+    HOST_MAPPED_GID="$(id -g)";
+    HOST_MAPPED_USER="$(id -un)";
+    HOST_MAPPED_UID="$(id -u)";
 
     # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
     if compose_create >/dev/null; then
@@ -158,7 +158,7 @@ for arg do
     if [ "$search_for_insert" = 'true' ]; then
         case $arg in
             create|exec|run)
-                set -- "$@" "$arg" '--env' "GID=$GID" '--env' "GROUP=$GROUP" '--env' "UID=$UID" '--env' "USER=$USER";
+                set -- "$@" "$arg" '--env' "HOST_MAPPED_GID=$HOST_MAPPED_GID" '--env' "HOST_MAPPED_GROUP=$HOST_MAPPED_GROUP" '--env' "HOST_MAPPED_UID=$HOST_MAPPED_UID" '--env' "HOST_MAPPED_USER=$HOST_MAPPED_USER";
                 if [ -n "$CHOWN_LIST" ]; then
                     set -- "$@" '--env' "CHOWN_LIST=$CHOWN_LIST";
                 fi
@@ -173,10 +173,10 @@ for arg do
     fi
 done
 
-export GROUP;
-export GID;
-export USER;
-export UID;
+export HOST_MAPPED_GROUP;
+export HOST_MAPPED_GID;
+export HOST_MAPPED_USER;
+export HOST_MAPPED_UID;
 if [ -n "$CHOWN_LIST" ]; then
     export CHOWN_LIST;
 fi
