@@ -19,7 +19,7 @@ rm docker-compose2.yml;
 touch docker.npmrc;
 
 $COMPOSE_ENGINE build;
-./user-mirror sh -c 'echo "$GROUP $GID $USER $UID"';
+./user-mirror sh -c 'echo "nested-bind-test $GROUP $GID $USER $UID"';
 ./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
 
 # Test file exists
