@@ -1,6 +1,22 @@
 #!/bin/sh
 set -eC;
 
+compose_create() {
+    if [ -n "$COMPOSE_FILES" ]; then
+        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" create
+    else
+        $COMPOSE_ENGINE --progress quiet create
+    fi
+}
+
+get_created_container_id() {
+    if [ -n "$COMPOSE_FILES" ]; then
+        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" ps -a --status created --format '{{.ID}}';
+    else
+        $COMPOSE_ENGINE --progress quiet ps -a --status created --format '{{.ID}}';
+    fi
+}
+
 # Parse options
 while [ $# -gt 0 ]; do
     case $1 in
@@ -59,7 +75,7 @@ COMPOSE_FILES="";
 for arg do
     case $arg in
         -f|--file)
-            COMPOSE_FILES="--file $1";
+            COMPOSE_FILES="$1";
             ;;
     esac
 done
@@ -90,8 +106,8 @@ if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOpti
 else
 
     # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
-    if $COMPOSE_ENGINE --progress quiet $COMPOSE_FILES create >/dev/null; then
-        TEMP_CONTAINER_ID="$($COMPOSE_ENGINE --progress quiet $COMPOSE_FILES ps -a --status created --format '{{.ID}}')";
+    if compose_create >/dev/null; then
+        TEMP_CONTAINER_ID="$(get_created_container_id)";
 
         # Create a list of paths to chown within the container.
         CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if (ne .Mode "")}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
