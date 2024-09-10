@@ -92,23 +92,28 @@ if [ "$o_setup" = true ]; then
 else
     set -eC;
 
+    
     if [ -z "$GID" ]; then
         printf 'GID is unset\n' >&2;
-        exit 1;
+        guard_failure=true;
     fi
 
     if [ -z "$GROUP" ]; then
         printf 'GROUP is unset\n' >&2;
-        exit 1;
+        guard_failure=true;
     fi
 
     if [ -z "$UID" ]; then
         printf 'UID is unset\n' >&2;
-        exit 1;
+        guard_failure=true;
     fi
 
     if [ -z "$USER" ]; then
         printf 'USER is unset\n' >&2;
+        guard_failure=true;
+    fi
+
+    if [ "$guard_failure" = 'true' ]; then
         exit 1;
     fi
 
