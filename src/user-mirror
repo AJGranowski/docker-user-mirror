@@ -81,29 +81,15 @@ for arg do
 done
 
 if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    first_iteration=true;
-    search_for_insert=true;
-    for arg do
-        if [ "$first_iteration" = 'true' ]; then
-            unset first_iteration;
-            shift $#;
-        fi
-
-        if [ "$search_for_insert" = 'true' ]; then
-            case $arg in
-                create|exec|run)
-                    set -- "$@" "$arg" '--env' 'GID=0' '--env' 'GROUP=root' '--env' 'UID=0' '--env' 'USER=root';
-                    unset search_for_insert;
-                    ;;
-                *)
-                    set -- "$@" "$arg";
-                    ;;
-            esac
-        else
-            set -- "$@" "$arg";
-        fi
-    done
+    GROUP='root';
+    GID=0;
+    USER='root';
+    UID=0;
 else
+    GROUP="$(id -gn)";
+    GID="$(id -g)";
+    USER="$(id -un)";
+    UID="$(id -u)";
 
     # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
     if compose_create >/dev/null; then
@@ -159,32 +145,10 @@ EOF
 
         $CONTAINER_ENGINE container rm "$TEMP_CONTAINER_ID" >/dev/null 2>&1;
     fi
-
-    first_iteration=true;
-    search_for_insert=true;
-    for arg do
-        if [ "$first_iteration" = 'true' ]; then
-            unset first_iteration;
-            shift $#;
-        fi
-
-        if [ "$search_for_insert" = 'true' ]; then
-            case $arg in
-                create|exec|run)
-                    set -- "$@" "$arg" '--env' "GID=$(id -g)" '--env' "GROUP=$(id -gn)" '--env' "UID=$(id -u)" '--env' "USER=$(id -un)";
-                    if [ -n "$CHOWN_LIST" ]; then
-                        set -- "$@" '--env' "CHOWN=$CHOWN_LIST";
-                    fi
-                    unset search_for_insert;
-                    ;;
-                *)
-                    set -- "$@" "$arg";
-                    ;;
-            esac
-        else
-            set -- "$@" "$arg";
-        fi
-    done
 fi
 
-"$@";
+if [ -n "$CHOWN_LIST" ]; then
+    GROUP="$GROUP" GID="$GID" USER="$USER" UID="$UID" CHOWN_LIST="$CHOWN_LIST" "$@";
+else
+    GROUP="$GROUP" GID="$GID" USER="$USER" UID="$UID" "$@";
+fi

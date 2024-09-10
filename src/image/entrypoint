@@ -155,8 +155,8 @@ else
     fi
 
     # Set the ownership of a set of items to the user.
-    if [ -n "$CHOWN" ]; then
-        echo "$CHOWN" | xargs chown -c "$UID:$GID" >&3;
+    if [ -n "$CHOWN_LIST" ]; then
+        echo "$CHOWN_LIST" | xargs chown -c "$UID:$GID" >&3;
     fi
 
     # Execute using $UID

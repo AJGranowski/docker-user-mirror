@@ -16,6 +16,11 @@ services:
     entrypoint: [/entrypoint, --, sh]
     environment:
       CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
+      CHOWN_LIST: # Set by Docker User Mirror
+      GROUP: # Set by Docker User Mirror
+      GID: # Set by Docker User Mirror
+      USER: # Set by Docker User Mirror
+      UID: # Set by Docker User Mirror
 
     network_mode: none
     volumes:
