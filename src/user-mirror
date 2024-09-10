@@ -147,6 +147,32 @@ EOF
     fi
 fi
 
+first_iteration=true;
+search_for_insert=true;
+for arg do
+    if [ "$first_iteration" = 'true' ]; then
+        unset first_iteration;
+        shift $#;
+    fi
+
+    if [ "$search_for_insert" = 'true' ]; then
+        case $arg in
+            create|exec|run)
+                set -- "$@" "$arg" '--env' "GID=$GID" '--env' "GROUP=$GROUP" '--env' "UID=$UID" '--env' "USER=$USER";
+                if [ -n "$CHOWN_LIST" ]; then
+                    set -- "$@" '--env' "CHOWN_LIST=$CHOWN_LIST";
+                fi
+                unset search_for_insert;
+                ;;
+            *)
+                set -- "$@" "$arg";
+                ;;
+        esac
+    else
+        set -- "$@" "$arg";
+    fi
+done
+
 export GROUP;
 export GID;
 export USER;

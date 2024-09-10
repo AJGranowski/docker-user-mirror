@@ -92,7 +92,6 @@ if [ "$o_setup" = true ]; then
 else
     set -eC;
 
-    echo "entrypoint $GROUP $GID $USER $UID";
     if [ -z "$GID" ]; then
         printf 'GID is unset\n' >&2;
         guard_failure=true;
