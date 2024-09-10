@@ -9,7 +9,7 @@ services:
     volumes:
       - type: bind
         source: ./docker.npmrc
-        target: /dockerfile-user-mirror/.npmrc
+        target: /docker-user-mirror/.npmrc
 EOF
 
 $COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-compose.yml;

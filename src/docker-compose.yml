@@ -22,6 +22,6 @@ services:
       # Bind the current directory to the working directory inside the container.
       - type: bind
         source: ./
-        target: /dockerfile-user-mirror
+        target: /docker-user-mirror
 
-    working_dir: /dockerfile-user-mirror
+    working_dir: /docker-user-mirror

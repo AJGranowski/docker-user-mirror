@@ -74,4 +74,4 @@ jobs:
       if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
         grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
-        COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' TESTING_ENVIRONMENT_DIR='/tmp/dockerfile-user-mirror/' ./ci
+        COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' TESTING_ENVIRONMENT_DIR='/tmp/docker-user-mirror/' ./ci

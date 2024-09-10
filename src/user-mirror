@@ -5,20 +5,20 @@ set -eC;
 while [ $# -gt 0 ]; do
     case $1 in
         --docker)
-            COMPOSE_ENGINE='docker compose'
-            CONTAINER_ENGINE='docker'
+            COMPOSE_ENGINE='docker compose';
+            CONTAINER_ENGINE='docker';
             ;;
         --docker-compose)
-            COMPOSE_ENGINE='docker-compose'
-            CONTAINER_ENGINE='docker'
+            COMPOSE_ENGINE='docker-compose';
+            CONTAINER_ENGINE='docker';
             ;;
         --podman)
-            COMPOSE_ENGINE='podman compose'
-            CONTAINER_ENGINE='podman'
+            COMPOSE_ENGINE='podman compose';
+            CONTAINER_ENGINE='podman';
             ;;
         --podman-compose)
-            COMPOSE_ENGINE='podman-compose'
-            CONTAINER_ENGINE='podman'
+            COMPOSE_ENGINE='podman-compose';
+            CONTAINER_ENGINE='podman';
             ;;
         --)
             shift;
@@ -27,7 +27,6 @@ while [ $# -gt 0 ]; do
         -*)
             printf 'Unknown option %s\n' $1 >&2;
             exit 1;
-            break;
             ;;
         *)
             break;
@@ -39,20 +38,20 @@ done
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     case $1 in
         docker-compose)
-            COMPOSE_ENGINE='docker-compose'
-            CONTAINER_ENGINE='docker'
+            COMPOSE_ENGINE='docker-compose';
+            CONTAINER_ENGINE='docker';
             ;;
         podman)
-            COMPOSE_ENGINE='podman compose'
-            CONTAINER_ENGINE='podman'
+            COMPOSE_ENGINE='podman compose';
+            CONTAINER_ENGINE='podman';
             ;;
         podman-compose)
-            COMPOSE_ENGINE='podman-compose'
-            CONTAINER_ENGINE='podman'
+            COMPOSE_ENGINE='podman-compose';
+            CONTAINER_ENGINE='podman';
             ;;
         *)
-            COMPOSE_ENGINE='docker compose'
-            CONTAINER_ENGINE='docker'
+            COMPOSE_ENGINE='docker compose';
+            CONTAINER_ENGINE='docker';
     esac
 fi
 
@@ -60,7 +59,7 @@ COMPOSE_FILES="";
 for arg do
     case $arg in
         -f|--file)
-            COMPOSE_FILES="--file $1"
+            COMPOSE_FILES="--file $1";
             ;;
     esac
 done
@@ -70,15 +69,15 @@ if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOpti
     search_for_insert=true;
     for arg do
         if [ "$first_iteration" = 'true' ]; then
-            unset first_iteration
-            shift $#
+            unset first_iteration;
+            shift $#;
         fi
 
         if [ "$search_for_insert" = 'true' ]; then
             case $arg in
                 create|exec|run)
                     set -- "$@" "$arg" '--env' 'GID=0' '--env' 'GROUP=root' '--env' 'UID=0' '--env' 'USER=root';
-                    unset search_for_insert
+                    unset search_for_insert;
                     ;;
                 *)
                     set -- "$@" "$arg";
@@ -149,8 +148,8 @@ EOF
     search_for_insert=true;
     for arg do
         if [ "$first_iteration" = 'true' ]; then
-            unset first_iteration
-            shift $#
+            unset first_iteration;
+            shift $#;
         fi
 
         if [ "$search_for_insert" = 'true' ]; then
@@ -160,7 +159,7 @@ EOF
                     if [ -n "$CHOWN_LIST" ]; then
                         set -- "$@" '--env' "CHOWN=$CHOWN_LIST";
                     fi
-                    unset search_for_insert
+                    unset search_for_insert;
                     ;;
                 *)
                     set -- "$@" "$arg";
@@ -172,4 +171,4 @@ EOF
     done
 fi
 
-"$@"
+"$@";

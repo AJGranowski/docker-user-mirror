@@ -9,7 +9,7 @@ services:
     volumes:
       - type: volume
         source: volume
-        target: /dockerfile-user-mirror/volume
+        target: /docker-user-mirror/volume
 volumes:
   volume:
 EOF
