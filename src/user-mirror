@@ -81,12 +81,7 @@ for arg do
     esac
 done
 
-if [ "$CONTAINER_ENGINE" = "podman" ] || docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    HOST_MAPPED_GROUP='root';
-    HOST_MAPPED_GID=0;
-    HOST_MAPPED_USER='root';
-    HOST_MAPPED_UID=0;
-else
+if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
     HOST_MAPPED_GROUP="$(id -gn)";
     HOST_MAPPED_GID="$(id -g)";
     HOST_MAPPED_USER="$(id -un)";
@@ -146,6 +141,11 @@ EOF
 
         $CONTAINER_ENGINE container rm "$TEMP_CONTAINER_ID" >/dev/null 2>&1;
     fi
+else
+    HOST_MAPPED_GROUP='root';
+    HOST_MAPPED_GID=0;
+    HOST_MAPPED_USER='root';
+    HOST_MAPPED_UID=0;
 fi
 
 first_iteration=true;
