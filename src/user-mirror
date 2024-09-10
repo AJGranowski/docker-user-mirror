@@ -3,9 +3,9 @@ set -eC;
 
 compose_create() {
     if [ -n "$COMPOSE_FILES" ]; then
-        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" create
+        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" create;
     else
-        $COMPOSE_ENGINE --progress quiet create
+        $COMPOSE_ENGINE --progress quiet create;
     fi
 }
 
@@ -51,6 +51,7 @@ while [ $# -gt 0 ]; do
     shift;
 done
 
+# Parse the command if no engine declared
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     case $1 in
         docker-compose)
