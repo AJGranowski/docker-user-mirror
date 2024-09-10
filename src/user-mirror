@@ -158,9 +158,9 @@ for arg do
     if [ "$search_for_insert" = 'true' ]; then
         case $arg in
             create|exec|run)
-                set -- "$@" "$arg" '--env' "HOST_MAPPED_GID=$HOST_MAPPED_GID" '--env' "HOST_MAPPED_GROUP=$HOST_MAPPED_GROUP" '--env' "HOST_MAPPED_UID=$HOST_MAPPED_UID" '--env' "HOST_MAPPED_USER=$HOST_MAPPED_USER";
+                set -- "$@" "$arg" '-e' 'HOST_MAPPED_GID' '-e' 'HOST_MAPPED_GROUP' '-e' 'HOST_MAPPED_UID' '-e' 'HOST_MAPPED_USER';
                 if [ -n "$CHOWN_LIST" ]; then
-                    set -- "$@" '--env' "CHOWN_LIST=$CHOWN_LIST";
+                    set -- "$@" '-e' 'CHOWN_LIST';
                 fi
                 unset search_for_insert;
                 ;;
