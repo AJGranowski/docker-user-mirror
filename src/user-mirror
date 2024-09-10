@@ -147,13 +147,12 @@ EOF
     fi
 fi
 
-export GROUP="$GROUP";
-export GID="$GID";
-export USER="$USER";
-export UID="$UID";
-
+export GROUP;
+export GID;
+export USER;
+export UID;
 if [ -n "$CHOWN_LIST" ]; then
-    export CHOWN_LIST="$CHOWN_LIST";
+    export CHOWN_LIST;
 fi
 
 "$@";
