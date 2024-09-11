@@ -171,7 +171,7 @@ else
             capabilities='-all';
         fi
 
-        echo "setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
+        echo "setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reset-env --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
         setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reset-env --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
     elif command -v gosu >/dev/null; then
         echo "gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
