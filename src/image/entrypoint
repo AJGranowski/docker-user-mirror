@@ -153,7 +153,7 @@ else
         if command -v useradd >/dev/null; then
             useradd -g $HOST_MAPPED_GID -M -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER;
         else
-            adduser -DH -G "$gid_groupname" -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER;
+            adduser -D -G "$gid_groupname" -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&3;
         fi
         echo "Created user: $(print_user "$HOST_MAPPED_USER")" >&3;
     fi
@@ -172,7 +172,7 @@ else
         fi
 
         echo "setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
-        setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
+        setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reset-env --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
     elif command -v gosu >/dev/null; then
         echo "gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
         gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$@";
