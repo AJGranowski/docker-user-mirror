@@ -151,7 +151,7 @@ else
         gid_groupname="$(awk -F: "\$3 == $HOST_MAPPED_GID {print \$1}" /etc/group)";
 
         if command -v useradd >/dev/null; then
-            useradd -g $HOST_MAPPED_GID -M -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER;
+            useradd -g $HOST_MAPPED_GID -m -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&3;
         else
             adduser -D -G "$gid_groupname" -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&3;
         fi

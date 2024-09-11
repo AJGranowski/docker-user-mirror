@@ -1,0 +1,9 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE run --rm sh -c '\
+    ((cd ~ && pwd) | grep -q "$USER" >/dev/null) || \
+    (echo "User $USER does not have a home directory. (~ resolves to $(cd ~ && pwd))" >&2 && false) \
+    ';
