@@ -36,6 +36,15 @@ if [ -z "$TESTING_ENVIRONMENT_DIR" ]; then
     TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/../bin")";
 fi
 
+case $COMPOSE_ENGINE in
+    docker*)
+        CONTAINER_ENGINE='docker';
+        ;;
+    podman*)
+        CONTAINER_ENGINE='podman';
+        ;;
+esac
+
 # Create the test namespace
 test_dir="$TESTING_ENVIRONMENT_DIR/$(uuid)";
 mkdir -p "$test_dir";
@@ -56,7 +65,7 @@ cp "$SRC_DIR/user-mirror" "$test_dir";
 
 # Run the test
 echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $COMPOSE_ENGINE... ($(basename "$test_dir"))";
-if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" $TEST_SCRIPT_PATH "$@"); then
+if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" CONTAINER_ENGINE="$CONTAINER_ENGINE" $TEST_SCRIPT_PATH "$@"); then
     test_status='success';
 else
     test_status='failure';
@@ -64,6 +73,7 @@ fi
 
 # Remove the image
 (cd "$test_dir" && $COMPOSE_ENGINE down --rmi local 2>/dev/null) || true;
+($CONTAINER_ENGINE rm "$(basename "$TEST_SCRIPT_PATH")" 2>/dev/null) || true;
 
 if [ "$test_status" != 'success' ]; then
     false;
