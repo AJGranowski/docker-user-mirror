@@ -8,20 +8,12 @@ mkdir -p "$RELEASE_DIR";
 cp src/user-mirror "$RELEASE_DIR";
 cp src/image/entrypoint "$RELEASE_DIR";
 
-this_commit="$(git rev-parse HEAD)";
-
 # Attempt to set the version based off of the previous "release-x.x.x" tag.
-# Use the current commit if that tag is not found.
+# Otherwise, just use the current commit.
 if last_release_tag="$(git describe --tags --abbrev=0 --match=release-*)" 2>/dev/null; then
-    VERSION="$(echo "$last_release_tag" | cut -c 9-)";
-    last_release_tag_commit="$(git rev-list --max-count=1 "$last_release_tag")";
-
-    # If the current commit is not the release commit, append a short-form identifier.
-    if [ "$last_release_tag_commit" != "$this_commit" ]; then
-        VERSION="${VERSION}-$(echo "$this_commit" | cut -c -7)";
-    fi
+    VERSION="$(echo "$last_release_tag" | cut -c 9-)-$(git rev-parse --short HEAD)";
 else
-    VERSION="$this_commit";
+    VERSION="$(git rev-parse HEAD)";
 fi
 
 # Replace VERSION= in the scripts with the release version.
