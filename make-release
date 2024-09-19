@@ -1,0 +1,34 @@
+#!/bin/sh
+set -euC;
+
+RELEASE_DIR="release/";
+
+# Copy the release artifacts to the release directory.
+mkdir -p "$RELEASE_DIR";
+cp src/user-mirror "$RELEASE_DIR";
+cp src/image/entrypoint "$RELEASE_DIR";
+
+this_commit="$(git rev-parse HEAD)";
+
+# Attempt to set the version based off of the previous "release-x.x.x" tag.
+# Use the current commit if that tag is not found.
+if last_release_tag="$(git describe --tags --abbrev=0 --match=release-*)" 2>/dev/null; then
+    VERSION="$(echo "$last_release_tag" | cut -c 9-)";
+    last_release_tag_commit="$(git rev-list --max-count=1 "$last_release_tag")";
+
+    # If the current commit is not the release commit, append a short-form identifier.
+    if [ "$last_release_tag_commit" != "$this_commit" ]; then
+        VERSION="${VERSION}-$(echo "$this_commit" | cut -c -7)";
+    fi
+else
+    VERSION="$this_commit";
+fi
+
+# Replace VERSION= in the scripts with the release version.
+(cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development';/VERSION='$VERSION';/" *);
+if command -v shellcheck >/dev/null; then
+    (cd "$RELEASE_DIR" && \
+    grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning);
+fi
+
+echo "Release $VERSION generated in $RELEASE_DIR";

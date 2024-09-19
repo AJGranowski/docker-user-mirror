@@ -1,5 +1,9 @@
 #!/bin/sh
+# Source: https://github.com/AJGranowski/docker-user-mirror
+# License: MIT
 set -eC;
+
+VERSION='development';
 
 # Create a container and return the container ID.
 container_create() {
@@ -32,6 +36,10 @@ while [ $# -gt 0 ]; do
         --podman-compose)
             COMPOSE_ENGINE='podman-compose';
             CONTAINER_ENGINE='podman';
+            ;;
+        --version)
+            echo "Version: ${VERSION}";
+            exit 0;
             ;;
         --)
             shift;
