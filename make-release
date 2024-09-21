@@ -1,5 +1,5 @@
 #!/bin/sh
-#testing6
+#testing7
 set -euC;
 
 RELEASE_DIR="release/";
