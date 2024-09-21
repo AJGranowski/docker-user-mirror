@@ -19,8 +19,6 @@ jobs:
   ci:
     name: Continuous Integration
     runs-on: ubuntu-latest
-    concurrency:
-      group: ci-${{ github.sha }}
     strategy:
       matrix:
         container-context: ["docker-default", "docker-rootless", "podman"]
