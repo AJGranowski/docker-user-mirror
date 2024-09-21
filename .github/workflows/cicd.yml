@@ -73,6 +73,13 @@ jobs:
         pip3 install --require-hashes --requirement /tmp/requirements.txt
         rm /tmp/requirements.txt
 
+    - name: Docker Cache
+      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
+      id: docker-cache
+      uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0
+      with:
+        key: docker-${{ runner.os }}-${{ hashFiles('./images/alpine/Dockerfile', './images/busybox/Dockerfile', './images/debian/Dockerfile', './images/ubuntu/Dockerfile') }}
+
     - name: Run Tests
       if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       run: |
@@ -112,7 +119,9 @@ jobs:
 
     - name: Get Latest Release Tag
       if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
-      run: echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
+      run: |
+        git tag --list --sort=-v:refname release-* | head -1
+        echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
 
     - name: Tag Release
       if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
