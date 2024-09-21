@@ -120,6 +120,8 @@ jobs:
     - name: Get Latest Release Tag
       if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: |
+        git status
+        git tag --list
         git tag --list --sort=-v:refname release-* | head -1
         echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
 
