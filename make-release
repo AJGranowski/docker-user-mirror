@@ -1,5 +1,4 @@
 #!/bin/sh
-#testing7
 set -euC;
 
 RELEASE_DIR="release/";

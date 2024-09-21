@@ -92,8 +92,8 @@ jobs:
         chmod --changes +x ./make-release
         ./make-release
 
-  automatic-release:
-    name: Automatic Release
+  tag-for-release:
+    name: Tag For Release
     runs-on: ubuntu-latest
     needs: ci
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -126,11 +126,7 @@ jobs:
 
     - name: Get Latest Release Tag
       if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
-      run: |
-        git status
-        git tag --list
-        git tag --list --sort=-v:refname release-* | head -1
-        echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
+      run: echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
 
     - name: Tag Release
       if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
@@ -148,7 +144,7 @@ jobs:
               github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: `refs/tags/test-${incrementReleaseTag}`,
+                ref: `refs/tags/${incrementReleaseTag}`,
                 sha: context.sha
               });
             }
