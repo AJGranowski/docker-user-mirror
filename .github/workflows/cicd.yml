@@ -48,6 +48,7 @@ jobs:
     # Maybe one day GitHub will handle this for us using path filters, but for now we need to skip all of the steps that would normally run for non-code changes ourselves.
     # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks#handling-skipped-but-required-checks
     - name: Detect Changed Files
+      if: ${{ github.ref_type != 'tag' }}
       id: changed-files
       uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
       with:
@@ -59,11 +60,11 @@ jobs:
             - ".github/workflows/*.yml"
     
     - name: Use Rootless Docker
-      if: ${{ matrix.container-context == 'docker-rootless' && steps.changed-files.outputs.paths_any_changed == 'true' }}
+      if: ${{ matrix.container-context == 'docker-rootless' && (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
 
     - name: Install Podman Compose
-      if: ${{ matrix.container-context == 'podman' && steps.changed-files.outputs.paths_any_changed == 'true' }}
+      if: ${{ matrix.container-context == 'podman' && (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       # Podman in the GitHub runner is out of date, so we either need to upgrade it ourselves or install an older version of podman-compose.
       # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
       run: |
@@ -73,13 +74,13 @@ jobs:
         rm /tmp/requirements.txt
 
     - name: Run Tests
-      if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
+      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       run: |
         grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
         COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' TESTING_ENVIRONMENT_DIR='/tmp/docker-user-mirror/' ./ci
 
     - name: Test Release Script
-      if: ${{ steps.changed-files.outputs.paths_any_changed == 'true' }}
+      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       run: |
         chmod --changes +x ./make-release
         ./make-release
@@ -98,7 +99,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Generate Release
+      - name: Extract Version
+        run: echo "RELEASE_VERSION=$(echo '${{ github.ref }}' | cut -c 19-)" >> $GITHUB_ENV
+
+      - name: Generate Release Artifacts
         run: |
           chmod --changes +x ./make-release
           ./make-release
+
+      - name: Create Release
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1.14.0
+        with:
+          artifactErrorsFailBuild: true
+          artifacts: "release/entrypoint,release/user-mirror"
+          draft: true
+          generateReleaseNotes: true
+          name: Release ${{ env.RELEASE_VERSION }}
+          token: ${{ secrets.PAT }}
