@@ -113,7 +113,6 @@ jobs:
         with:
           artifactErrorsFailBuild: true
           artifacts: "release/entrypoint,release/user-mirror"
-          draft: true
           generateReleaseNotes: true
           name: Release ${{ env.RELEASE_VERSION }}
           token: ${{ secrets.PAT }}
