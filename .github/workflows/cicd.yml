@@ -92,13 +92,38 @@ jobs:
         chmod --changes +x ./make-release
         ./make-release
 
+  should-tag-for-release:
+    name: "Pre: Tag for Release"
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && github.ref_type != 'tag' }}
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      with:
+        egress-policy: audit
+
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+    - name: Detect Changed Files
+      id: changed-files
+      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
+      with:
+        files_yaml: |
+          paths:
+            - "make-release"
+            - "src/image/entrypoint"
+            - "src/user-mirror"
+
+    - name: Set PATHS_ANY_CHANGED
+      run: echo "PATHS_ANY_CHANGED=${{ steps.changed-files.outputs.paths_any_changed == 'true' }}" >> "$GITHUB_OUTPUT"
+
   tag-for-release:
     name: Tag for Release
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ci, should-tag-for-release]
+    if: ${{ needs.should-tag-for-release.outputs.PATHS_ANY_CHANGED == 'true' }}
     environment: production
-    if: ${{ github.ref == 'refs/heads/main' }}
-
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -112,23 +137,10 @@ jobs:
         fetch-tags: true
         filter: tree:0
 
-    - name: Detect Changed Files
-      if: ${{ github.ref_type != 'tag' }}
-      id: changed-files
-      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
-      with:
-        files_yaml: |
-          paths:
-            - "make-release"
-            - "src/image/entrypoint"
-            - "src/user-mirror"
-
     - name: Get Latest Release Tag
-      if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
       run: echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
 
     - name: Tag Release
-      if: ${{ github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true' }}
       uses: actions/github-script@v7
       env:
         LATEST_RELEASE_TAG: ${{ env.LATEST_RELEASE_TAG }}
