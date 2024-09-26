@@ -1,4 +1,4 @@
-[![Continuous Integration][continuous-integration-badge]][continuous-integration-link]
+[![CI/CD][cicd-badge]][cicd-link]
 [![OpenSSF Scorecard][scorecard-badge]][scorecard-link]
 
 <header align="center">
@@ -42,8 +42,8 @@ Run `ci` to run the test scripts in `test/` with the images in `images/` using b
 
 [best-practices-badge]: https://www.bestpractices.dev/
 [best-practices-link]: https://www.bestpractices.dev/
-[continuous-integration-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/ci.yml/badge.svg?branch=main
-[continuous-integration-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/ci.yml
+[cicd-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml/badge.svg?branch=main
+[cicd-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml
 [reddit-expanded-community-filter-userscript]: https://github.com/AJGranowski/reddit-expanded-community-filter-userscript
 [scorecard-badge]: https://api.securityscorecards.dev/projects/github.com/AJGranowski/docker-user-mirror/badge
 [scorecard-link]: https://securityscorecards.dev/viewer/?uri=github.com/AJGranowski/docker-user-mirror
