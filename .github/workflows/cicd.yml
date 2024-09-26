@@ -20,8 +20,8 @@ jobs:
     name: Detect Changed Files
     runs-on: ubuntu-latest
     outputs:
-      run-ci: ${{ steps.set-github-output.RUN_CI }}
-      run-tag-for-release: ${{ steps.set-github-output.RUN_TAG_FOR_RELEASE }}
+      run-ci: ${{ steps.set-github-output.outputs.RUN_CI }}
+      run-tag-for-release: ${{ steps.set-github-output.outputs.RUN_TAG_FOR_RELEASE }}
 
     steps:
     - name: Harden Runner
