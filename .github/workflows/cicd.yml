@@ -19,6 +19,10 @@ jobs:
   changed-files:
     name: Detect Changed Files
     runs-on: ubuntu-latest
+    outputs:
+      run-ci: ${{ steps.set-github-output.RUN_CI }}
+      run-tag-for-release: ${{ steps.set-github-output.RUN_TAG_FOR_RELEASE }}
+
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -50,6 +54,7 @@ jobs:
             - "src/user-mirror"
 
     - name: Set GITHUB_OUTPUT
+      id: set-github-output
       run: |
         echo "RUN_CI=${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}" >> "$GITHUB_OUTPUT"
         echo "RUN_TAG_FOR_RELEASE=${{ github.ref == 'refs/heads/main' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}" >> "$GITHUB_OUTPUT"
@@ -58,7 +63,7 @@ jobs:
     name: Continuous Integration
     runs-on: ubuntu-latest
     needs: changed-files
-    if: ${{ needs.changed-files.outputs.RUN_CI == 'true' }}
+    if: ${{ needs.changed-files.outputs.run-ci == 'true' }}
     strategy:
       matrix:
         container-context: ["docker-default", "docker-rootless", "podman"]
@@ -120,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changed-files, ci]
     environment: production
-    if: ${{ needs.changed-files.outputs.RUN_TAG_FOR_RELEASE == 'true' }}
+    if: ${{ needs.changed-files.outputs.run-tag-for-release == 'true' }}
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
