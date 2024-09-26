@@ -16,9 +16,49 @@ permissions:
   contents: read
 
 jobs:
+  changed-files:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      with:
+        egress-policy: audit
+
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+    - name: CI Files Changed
+      id: ci-files-changed
+      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
+      with:
+        files_yaml: |
+          paths:
+            - "**"
+            - "!*.md"
+            - "!.github/**"
+            - ".github/workflows/*.yml"
+
+    - name: Release Files Changed
+      id: release-files-changed
+      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
+      with:
+        files_yaml: |
+          paths:
+            - "make-release"
+            - "src/image/entrypoint"
+            - "src/user-mirror"
+
+    - name: Set GITHUB_OUTPUT
+      run: |
+        echo "RUN_CI=${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}" >> "$GITHUB_OUTPUT"
+        echo "RUN_TAG_FOR_RELEASE=${{ github.ref == 'refs/heads/main' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}" >> "$GITHUB_OUTPUT"
+
   ci:
     name: Continuous Integration
     runs-on: ubuntu-latest
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.RUN_CI == 'true' }}
     strategy:
       matrix:
         container-context: ["docker-default", "docker-rootless", "podman"]
@@ -44,27 +84,13 @@ jobs:
     
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-    # Maybe one day GitHub will handle this for us using path filters, but for now we need to skip all of the steps that would normally run for non-code changes ourselves.
-    # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks#handling-skipped-but-required-checks
-    - name: Detect Changed Files
-      if: ${{ github.ref_type != 'tag' }}
-      id: changed-files
-      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
-      with:
-        files_yaml: |
-          paths:
-            - "**"
-            - "!*.md"
-            - "!.github/**"
-            - ".github/workflows/*.yml"
     
     - name: Use Rootless Docker
-      if: ${{ matrix.container-context == 'docker-rootless' && (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
+      if: ${{ matrix.container-context == 'docker-rootless' }}
       uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
 
     - name: Install Podman Compose
-      if: ${{ matrix.container-context == 'podman' && (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
+      if: ${{ matrix.container-context == 'podman' }}
       # Podman in the GitHub runner is out of date, so we either need to upgrade it ourselves or install an older version of podman-compose.
       # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
       run: |
@@ -74,56 +100,27 @@ jobs:
         rm /tmp/requirements.txt
 
     - name: Docker Cache
-      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       id: docker-cache
       uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0
       with:
         key: docker-${{ runner.os }}-${{ hashFiles('./images/alpine/Dockerfile', './images/busybox/Dockerfile', './images/debian/Dockerfile', './images/ubuntu/Dockerfile') }}
 
     - name: Run Tests
-      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       run: |
         grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs chmod --changes +x
         COMPOSE_ENGINE='${{ contains(matrix.container-context, 'podman') && 'podman-compose' || 'docker compose' }}' TESTING_ENVIRONMENT_DIR='/tmp/docker-user-mirror/' ./ci
 
     - name: Test Release Script
-      if: ${{ (github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.changed-files.outputs.paths_any_changed == 'true')) }}
       run: |
         chmod --changes +x ./make-release
         ./make-release
 
-  should-tag-for-release:
-    name: "Pre: Tag for Release"
-    runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && github.ref_type != 'tag' }}
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
-      with:
-        egress-policy: audit
-
-    - name: Checkout
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-    - name: Detect Changed Files
-      id: changed-files
-      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
-      with:
-        files_yaml: |
-          paths:
-            - "make-release"
-            - "src/image/entrypoint"
-            - "src/user-mirror"
-
-    - name: Set PATHS_ANY_CHANGED
-      run: echo "PATHS_ANY_CHANGED=${{ steps.changed-files.outputs.paths_any_changed == 'true' }}" >> "$GITHUB_OUTPUT"
-
   tag-for-release:
     name: Tag for Release
     runs-on: ubuntu-latest
-    needs: [ci, should-tag-for-release]
-    if: ${{ needs.should-tag-for-release.outputs.PATHS_ANY_CHANGED == 'true' }}
+    needs: [changed-files, ci]
     environment: production
+    if: ${{ needs.changed-files.outputs.RUN_TAG_FOR_RELEASE == 'true' }}
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
