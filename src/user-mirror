@@ -18,7 +18,7 @@ container_create() {
     fi
 }
 
-# Parse options
+# Parse options.
 while [ $# -gt 0 ]; do
     case $1 in
         --docker)
@@ -56,7 +56,7 @@ while [ $# -gt 0 ]; do
     shift;
 done
 
-# Parse the command if no engine declared
+# Parse the command if no engine declared.
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     case $1 in
         docker-compose)
@@ -78,7 +78,7 @@ if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     esac
 fi
 
-# Change exec/run to create if not using compose
+# Change "exec" and "run" to "create" if this is not a compose command.
 COMPOSE_FILES="";
 first_iteration=true;
 search_for_replace=4;
@@ -104,7 +104,7 @@ for arg do
                 ;;
         esac
 
-        # Decrement for non-option arguments
+        # Decrement for non-option arguments.
         case $arg in
             -*)
                 ;;
@@ -160,7 +160,7 @@ EOF
 
                 resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
                 if [ "$resolved_node_destination" = "$node_destination" ]; then
-                    # Skip if no resolution was made
+                    # Skip if no resolution was made.
                     continue;
                 fi
 
@@ -216,7 +216,7 @@ for arg do
                 ;;
         esac
 
-        # Decrement for non-option arguments
+        # Decrement for non-option arguments.
         case $arg in
             -*)
                 ;;
