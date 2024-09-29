@@ -162,7 +162,8 @@ jobs:
     - name: Get Latest Release Tag
       run: echo "LATEST_RELEASE_TAG=$(git tag --list --sort=-v:refname release-* | head -1)" >> $GITHUB_ENV
 
-    - name: Tag Release
+    - name: Increment Tag
+      id: increment-tag
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       env:
         LATEST_RELEASE_TAG: ${{ env.LATEST_RELEASE_TAG }}
@@ -174,14 +175,16 @@ jobs:
             const incrementReleaseTag = latestReleaseTag.replace(/(\d+)([^\.]*)$/, (_, x, y) => (Number(x) + 1) + y);
 
             if (incrementReleaseTag.length >= latestReleaseTag.length && latestReleaseTag !== incrementReleaseTag) {
-              github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/tags/${incrementReleaseTag}`,
-                sha: context.sha
-              });
+              return incrementReleaseTag;
             }
           }
+
+    - name: Tag Release
+      env:
+        NEW_RELEASE_TAG: ${{ steps.increment-tag.outputs.result }}
+      run: |
+        git tag "$NEW_RELEASE_TAG"
+        git push origin tag "$NEW_RELEASE_TAG"
 
   cd:
     name: Continuous Deployment
