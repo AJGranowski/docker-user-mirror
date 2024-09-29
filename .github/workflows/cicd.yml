@@ -171,7 +171,7 @@ jobs:
             throw new Error("LATEST_RELEASE_TAG is empty!");
           }
 
-          const incrementReleaseTag = latestReleaseTag.replace(/(\d+)([^\.]*)$/, (_, x, y) => (Number(x) + 1) + y);
+          const incrementReleaseTag = latestReleaseTag.replace(/(\d+)([^\.]*)$/, (_, x, y) => (Number(x) + 1).toString() + y);
           if (latestReleaseTag === incrementReleaseTag) {
             throw new Error("Tag increment failed! (proposed tag matches LATEST_RELEASE_TAG)");
           }
