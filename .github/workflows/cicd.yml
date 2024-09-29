@@ -167,19 +167,24 @@ jobs:
       with:
         script: |
           const latestReleaseTag = process.env.LATEST_RELEASE_TAG;
-
-          if (latestReleaseTag.length > 0) {
-            const incrementReleaseTag = latestReleaseTag.replace(/(\d+)([^\.]*)$/, (_, x, y) => (Number(x) + 1) + y);
-
-            if (incrementReleaseTag.length >= latestReleaseTag.length && latestReleaseTag !== incrementReleaseTag) {
-              return incrementReleaseTag;
-            }
+          if (latestReleaseTag.length === 0) {
+            throw new Error("LATEST_RELEASE_TAG is empty!");
           }
+
+          const incrementReleaseTag = latestReleaseTag.replace(/(\d+)([^\.]*)$/, (_, x, y) => (Number(x) + 1) + y);
+          if (latestReleaseTag === incrementReleaseTag) {
+            throw new Error("Tag increment failed! (proposed tag matches LATEST_RELEASE_TAG)");
+          }
+
+          if (incrementReleaseTag.length < latestReleaseTag.length) {
+            throw new Error(`Tag increment failed! (proposed tag ${incrementReleaseTag} is shorter than ${latestReleaseTag}`);
+          }
+
+          return incrementReleaseTag;
 
     - name: Tag Release
       env:
         NEW_RELEASE_TAG: ${{ fromJson(steps.increment-tag.outputs.result) }}
-      if: ${{ env.LATEST_RELEASE_TAG != '' && env.LATEST_RELEASE_TAG != '""' }}
       run: |
         git tag "$NEW_RELEASE_TAG";
         git push origin tag "$NEW_RELEASE_TAG";
