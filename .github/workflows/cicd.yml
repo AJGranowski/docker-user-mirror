@@ -179,9 +179,10 @@ jobs:
     - name: Tag Release
       env:
         NEW_RELEASE_TAG: ${{ fromJson(steps.increment-tag.outputs.result) }}
+      if: ${{ env.LATEST_RELEASE_TAG != '' && env.LATEST_RELEASE_TAG != '""' }}
       run: |
-        git tag "$NEW_RELEASE_TAG"
-        git push origin tag "$NEW_RELEASE_TAG"
+        git tag "$NEW_RELEASE_TAG";
+        git push origin tag "$NEW_RELEASE_TAG";
 
   cd:
     name: Continuous Deployment
