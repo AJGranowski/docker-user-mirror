@@ -214,4 +214,3 @@ jobs:
           artifacts: "release/entrypoint,release/user-mirror"
           generateReleaseNotes: true
           name: Release ${{ env.RELEASE_VERSION }}
-          token: ${{ secrets.PAT }}
