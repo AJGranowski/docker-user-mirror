@@ -1,6 +1,6 @@
 #!/bin/sh
 set -euC;
-#test3
+#test4
 
 RELEASE_DIR="release/";
 

@@ -181,7 +181,7 @@ jobs:
 
     - name: Tag Release
       env:
-        NEW_RELEASE_TAG: ${{ steps.increment-tag.outputs.result }}
+        NEW_RELEASE_TAG: ${{ fromJson(steps.increment-tag.outputs.result) }}
       run: |
         git tag "$NEW_RELEASE_TAG"
         git push origin tag "$NEW_RELEASE_TAG"
