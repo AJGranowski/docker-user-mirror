@@ -167,7 +167,6 @@ jobs:
       env:
         LATEST_RELEASE_TAG: ${{ env.LATEST_RELEASE_TAG }}
       with:
-        github-token: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           const latestReleaseTag = process.env.LATEST_RELEASE_TAG;
 
