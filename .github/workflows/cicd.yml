@@ -37,7 +37,7 @@ jobs:
 
     - name: Check for Tag
       run: |
-        if git describe --contains ${{ github.sha }}; then
+        if git describe --contains "$GITHUB_SHA"; then
           echo 'COMMIT_IS_TAGGED=true' >> "$GITHUB_ENV";
         else
           echo 'COMMIT_IS_TAGGED=false' >> "$GITHUB_ENV";
@@ -200,7 +200,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Extract Version
-        run: echo "RELEASE_VERSION=$(echo '${{ github.ref }}' | cut -c 19-)" >> $GITHUB_ENV
+        run: echo "RELEASE_VERSION=$(echo "$GITHUB_REF" | cut -c 19-)" >> $GITHUB_ENV
 
       - name: Generate Release Artifacts
         run: |
