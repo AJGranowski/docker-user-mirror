@@ -20,8 +20,8 @@ jobs:
     name: Detect Changed Files
     runs-on: ubuntu-latest
     outputs:
-      run-ci: ${{ steps.set-github-output.outputs.RUN_CI }}
-      run-tag-for-release: ${{ steps.set-github-output.outputs.RUN_TAG_FOR_RELEASE }}
+      run-ci: ${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}
+      run-tag-for-release: ${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}
 
     steps:
     - name: Harden Runner
@@ -63,12 +63,6 @@ jobs:
             - "make-release"
             - "src/image/entrypoint"
             - "src/user-mirror"
-
-    - name: Set GITHUB_OUTPUT
-      id: set-github-output
-      run: |
-        echo "RUN_CI=${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}" >> "$GITHUB_OUTPUT"
-        echo "RUN_TAG_FOR_RELEASE=${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}" >> "$GITHUB_OUTPUT"
 
   ci:
     name: Continuous Integration
