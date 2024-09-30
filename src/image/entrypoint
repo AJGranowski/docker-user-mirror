@@ -164,12 +164,18 @@ else
             adduser -D -G "$gid_groupname" -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&3;
         fi
         echo "Created user: $(print_user "$HOST_MAPPED_USER")" >&3;
+
+        HOME_DIR="/home/$HOST_MAPPED_USER";
+    else
+        HOME_DIR="/root";
     fi
 
     # Set the ownership of a set of items to the user.
     if [ -n "$CHOWN_LIST" ]; then
         echo "$CHOWN_LIST" | xargs chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" >&3;
     fi
+
+    if [ $HOST_MAPPED_UID -ne 0 ] && [ "$HOST_MAPPED_USER" != 'root' ]; then
 
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then
@@ -180,7 +186,7 @@ else
         fi
 
         echo "setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
-        HOME="/home/$HOST_MAPPED_USER" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
+        HOME="$HOME_DIR" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
     elif command -v gosu >/dev/null; then
         echo "gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
         gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$@";
