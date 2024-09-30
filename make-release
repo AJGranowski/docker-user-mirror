@@ -16,6 +16,9 @@ else
     VERSION="$(git rev-parse HEAD)";
 fi
 
+# Create version file
+printf "$VERSION" > "$RELEASE_DIR/version"
+
 # Replace VERSION= in the scripts with the release version.
 (cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development';/VERSION='$VERSION';/" *);
 if command -v shellcheck >/dev/null; then
