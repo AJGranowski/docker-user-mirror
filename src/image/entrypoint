@@ -183,11 +183,11 @@ else
             capabilities='-all';
         fi
 
-        echo "setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
+        echo "HOME=$HOME_DIR LOGNAME=$HOST_MAPPED_USER SHELL=/bin/sh USER=$HOST_MAPPED_USER setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
         HOME="$HOME_DIR" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
     elif command -v gosu >/dev/null; then
-        echo "gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
-        gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$@";
+        echo "HOME=$HOME_DIR LOGNAME=$HOST_MAPPED_USER SHELL=/bin/sh USER=$HOST_MAPPED_USER gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
+        HOME="$HOME_DIR" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$@";
     else
         printf 'Unable to set user\n' >&2;
         exit 1;
