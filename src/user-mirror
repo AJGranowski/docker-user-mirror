@@ -78,7 +78,9 @@ if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     esac
 fi
 
-# Change "exec" and "run" to "create" if this is not a compose command.
+# To get the arguments from a non-compose invocation, we'll change "exec" and "run" to "create", and then use that new
+#   command string to create (but not start) a container for parsing. This is a workaround for POSIX shell only having
+#   one array object (the argument list).
 COMPOSE_FILES="";
 first_iteration=true;
 search_for_replace=4;
@@ -122,18 +124,20 @@ for arg do
     fi
 done
 
+# If Docker and not rootless, then we have some work to do.
 if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
     HOST_MAPPED_GROUP="$(id -gn)";
     HOST_MAPPED_GID="$(id -g)";
     HOST_MAPPED_USER="$(id -un)";
     HOST_MAPPED_UID="$(id -u)";
 
-    # Parse docker-compose.yml by attempting to create and parse a container (but not starting it).
+    # Parse mount information by creating a container and parsing it (but not starting it).
     if TEMP_CONTAINER_ID="$(container_create "$@")"; then
-        # Create a list of paths to chown within the container.
+
+        # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
         CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
 
-        # Create host bind paths that where create_host_path=true.
+        # Loop through bind mounts that are read/write, and mkdir those source paths on the host.
         while read create_path; do
             if [ -z "$create_path" ]; then
                 break;
@@ -143,7 +147,8 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
         done <<EOF
 $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .RW}}{{println .Source}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
 EOF
-        # Create mounts nested within bind mounts on the host.
+        # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
+        #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
         while read edge_source; do
             if [ -z "$edge_source" ]; then
                 break;
@@ -158,9 +163,11 @@ EOF
 
                 read node_destination;
 
+                # Find replace
                 resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
+
                 if [ "$resolved_node_destination" = "$node_destination" ]; then
-                    # Skip if no resolution was made.
+                    # Skip this pair if no resolution was made.
                     continue;
                 fi
 
@@ -178,6 +185,7 @@ EOF
 $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
 EOF
 
+        # Cleanup.
         $CONTAINER_ENGINE container rm "$TEMP_CONTAINER_ID" >/dev/null 2>&1;
     fi
 else
@@ -187,6 +195,7 @@ else
     HOST_MAPPED_UID=0;
 fi
 
+# Restore the args list we may have mangled before, and insert runtime arguments.
 first_iteration=true;
 search_for_insert=4;
 for arg do
