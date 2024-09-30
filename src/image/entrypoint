@@ -175,8 +175,6 @@ else
         echo "$CHOWN_LIST" | xargs chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" >&3;
     fi
 
-    if [ $HOST_MAPPED_UID -ne 0 ] && [ "$HOST_MAPPED_USER" != 'root' ]; then
-
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then
         if [ -n "$CAPABILITIES" ]; then
