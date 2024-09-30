@@ -233,7 +233,7 @@ jobs:
         uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1.14.0
         with:
           artifactErrorsFailBuild: true
-          artifacts: "release/entrypoint,release/user-mirror"
+          artifacts: "release/entrypoint,release/user-mirror,release/version"
           generateReleaseNotes: true
           makeLatest: ${{ github.ref_name == env.LATEST_RELEASE_TAG }}
           name: Release ${{ env.RELEASE_VERSION }}
