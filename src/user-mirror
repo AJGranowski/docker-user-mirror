@@ -93,7 +93,7 @@ update() {
         return 0;
     fi
 
-    if [ "$o_yes" != 'true' ]; then
+    if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)';
         read yn;
         case $yn in
@@ -135,12 +135,12 @@ while [ $# -gt 0 ]; do
             COMPOSE_ENGINE='podman-compose';
             CONTAINER_ENGINE='podman';
             ;;
+        --update)
+            o_update=true;
+            ;;
         --version)
             echo "Version: ${VERSION}";
             exit 0;
-            ;;
-        --update)
-            o_update=true;
             ;;
         -y|--yes)
             o_yes=true;
@@ -160,7 +160,7 @@ while [ $# -gt 0 ]; do
     shift;
 done
 
-if [ "$o_update" = 'true' ]; then
+if [ "$o_update" = true ]; then
     if update; then
         exit 0;
     else
@@ -197,7 +197,7 @@ COMPOSE_FILES="";
 first_iteration=true;
 search_for_replace=4;
 for arg do
-    if [ "$first_iteration" = 'true' ]; then
+    if [ "$first_iteration" = true ]; then
         unset first_iteration;
         shift $#;
     fi
@@ -311,7 +311,7 @@ fi
 first_iteration=true;
 search_for_insert=4;
 for arg do
-    if [ "$first_iteration" = 'true' ]; then
+    if [ "$first_iteration" = true ]; then
         unset first_iteration;
         shift $#;
     fi
