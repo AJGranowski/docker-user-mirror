@@ -80,7 +80,7 @@ update() {
     else
         if ! release_tag_exists "$(version_to_release_tag)"; then
             echo 'Critical update required!';
-            echo '    This version has been deleted, signalling either a critical bug or vulnerability. Update immediately.'
+            echo '    This version has been deleted, signaling either a critical bug or vulnerability. Update immediately.'
         else
             echo 'New update available.'
         fi
