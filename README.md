@@ -3,7 +3,7 @@
 
 <header align="center">
     <h1 align="center">Docker User Mirror</h1>
-    <p align="center">Mirror host user ownership in rootful Docker containers.</p>
+    <p align="center">Mirror host user ownership in and out of rootful Docker containers.</p>
 </header>
 
 ## Why?
