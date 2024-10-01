@@ -2,7 +2,7 @@
 # Source: https://github.com/AJGranowski/docker-user-mirror
 # License: MIT
 set -eC;
-
+SCRIPT_NAME="$(basename "$0")";
 VERSION='development';
 
 # Create a container and return the container ID.
@@ -15,6 +15,104 @@ container_create() {
     else
         $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1;
         $COMPOSE_ENGINE --progress quiet ps -a --status created --format '{{.ID}}';
+    fi
+}
+
+# Download a release file.
+# Args: release filename, output filename, release tag (defaults to latest release it not provided)
+download_file() {
+    if [ $# -eq 3 ]; then
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
+    elif [ $# -eq 2 ]; then
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
+    else
+        echo 'Expected at least two arguments.' >&2;
+        return 1;
+    fi
+}
+
+# Query GitHub for the latest release tag.
+get_latest_release_tag() {
+    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')";
+    case "$(echo "$response" | tail -1)" in
+        2*)
+            echo "$response" | \
+            grep -E '^\s*"tag_name":' | \
+            sed -E 's/.*"tag_name": "([^"]+)".*/\1/g'
+        ;;
+        *) false;;
+    esac
+}
+
+# Get the version ID of a release.
+# Args: release tag (defaults to latest release it not provided)
+get_release_version() {
+    if [ $# -eq 0 ]; then
+        response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
+    else
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
+    fi
+
+    case "$(echo "$response" | tail -1)" in
+        2*)
+            echo "$response" | head -1
+            ;;
+        *) false;;
+    esac
+}
+
+# Query GitHub to check if a release tag exists.
+release_tag_exists() {
+    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/$1")" in
+        2*) true;;
+        *) false;;
+    esac
+}
+
+# Check for updates, and download the latest version.
+update() {
+    if ! latest_version="$(get_release_version)"; then
+        echo 'Unable to fetch the latest version. Try again in a few minutes.' >&2;
+        return 1;
+    fi
+
+    if [ "$VERSION" = "$latest_version" ]; then
+        echo 'Up to date.';
+    else
+        if ! release_tag_exists "$(version_to_release_tag)"; then
+            echo 'Critical update required!';
+            echo '    This version has been deleted, signalling either a critical bug or vulnerability. Update immediately.'
+        else
+            echo 'New update available.'
+        fi
+    fi
+
+    echo "    Current version: $VERSION";
+    echo "    Latest version:  $latest_version";
+
+    if [ "$VERSION" = "$latest_version" ]; then
+        return 0;
+    fi
+
+    if [ "$o_yes" != 'true' ]; then
+        echo '\nInstall the update? (y/n)';
+        read yn;
+        case $yn in
+            y*) break;;
+            n*) return 0;;
+        esac
+    fi
+
+    download_file "$SCRIPT_NAME" "${SCRIPT_NAME}.tmp";
+    mv "${SCRIPT_NAME}.tmp" "$SCRIPT_NAME";
+}
+
+# Convert "$VERSION" to "release-**" format.
+version_to_release_tag() {
+    if [ $# -eq 0 ]; then
+        echo "$VERSION" | sed -E 's/([^-]*).*/release-\1/g'
+    else
+        echo "$1" | sed -E 's/([^-]*).*/release-\1/g'
     fi
 }
 
@@ -41,6 +139,12 @@ while [ $# -gt 0 ]; do
             echo "Version: ${VERSION}";
             exit 0;
             ;;
+        --update)
+            o_update=true;
+            ;;
+        -y|--yes)
+            o_yes=true;
+            ;;
         --)
             shift;
             break;
@@ -55,6 +159,14 @@ while [ $# -gt 0 ]; do
     esac
     shift;
 done
+
+if [ "$o_update" = 'true' ]; then
+    if update; then
+        exit 0;
+    else
+        exit 1;
+    fi
+fi
 
 # Parse the command if no engine declared.
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
