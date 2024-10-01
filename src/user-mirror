@@ -102,8 +102,10 @@ update() {
         esac
     fi
 
+    echo "Installing update...";
     download_file "$(basename "$0")" "${0}.tmp";
     mv "${0}.tmp" "$0";
+    echo "${latest_version} installed!";
     exit 0;
 }
 
