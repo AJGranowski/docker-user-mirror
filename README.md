@@ -1,5 +1,6 @@
 [![CI/CD][cicd-badge]][cicd-link]
 [![OpenSSF Scorecard][scorecard-badge]][scorecard-link]
+[![OpenSSF Best Practices][best-practices-badge]][best-practices-link]
 
 <header align="center">
     <h1 align="center">Docker User Mirror</h1>
@@ -84,8 +85,8 @@ Run `ci` to run the test scripts in `test/` with the images in `images/` using b
 
 * [Reddit Expanded Community Filter][reddit-expanded-community-filter-userscript]
 
-[best-practices-badge]: https://www.bestpractices.dev/
-[best-practices-link]: https://www.bestpractices.dev/
+[best-practices-badge]: https://www.bestpractices.dev/projects/9502/badge
+[best-practices-link]: https://www.bestpractices.dev/projects/9502
 [cicd-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml/badge.svg?branch=main
 [cicd-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml
 [reddit-expanded-community-filter-userscript]: https://github.com/AJGranowski/reddit-expanded-community-filter-userscript
