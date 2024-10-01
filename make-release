@@ -4,6 +4,7 @@ set -euC;
 RELEASE_DIR="release/";
 
 # Copy the release artifacts to the release directory.
+rm -rf "$RELEASE_DIR";
 mkdir -p "$RELEASE_DIR";
 cp src/user-mirror "$RELEASE_DIR";
 cp src/image/entrypoint "$RELEASE_DIR";

@@ -98,7 +98,7 @@ update() {
         echo '\nInstall the update? (y/n)';
         read yn;
         case $yn in
-            y*) break;;
+            y*) ;;
             n*) return 0;;
         esac
     fi
