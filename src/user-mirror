@@ -2,7 +2,6 @@
 # Source: https://github.com/AJGranowski/docker-user-mirror
 # License: MIT
 set -eC;
-SCRIPT_NAME="$(basename "$0")";
 VERSION='development';
 
 # Create a container and return the container ID.
@@ -103,8 +102,9 @@ update() {
         esac
     fi
 
-    download_file "$SCRIPT_NAME" "${SCRIPT_NAME}.tmp";
-    mv "${SCRIPT_NAME}.tmp" "$SCRIPT_NAME";
+    download_file "$(basename "$0")" "${0}.tmp";
+    mv "${0}.tmp" "$0";
+    exit 0;
 }
 
 # Convert "$VERSION" to "release-**" format.
