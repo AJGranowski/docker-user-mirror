@@ -23,7 +23,7 @@ Steps to reproduce the behavior:
 <!-- A clear and concise description of what you expected to happen. -->
 
 **Environment:**
- - OS:  <!-- Run `cat cat /etc/*-release` and `cat /proc/version` e.g. Debian GNU/Linux trixie/sid Linux version 5.15.153.1-microsoft-standard-WSL2 -->
+ - OS:  <!-- Run `cat /etc/*-release` and `cat /proc/version` e.g. Debian GNU/Linux trixie/sid Linux version 5.15.153.1-microsoft-standard-WSL2 -->
  - Docker/Podman version: <!-- Run `docker version` -->
  - Script version: <!-- e.g. 0.1.2-abcdefg -->
 
