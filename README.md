@@ -1,3 +1,4 @@
+[![Total Downloads][downloads-badge]](#)
 [![CI/CD][cicd-badge]][cicd-link]
 [![OpenSSF Scorecard][scorecard-badge]][scorecard-link]
 [![OpenSSF Best Practices][best-practices-badge]][best-practices-link]
@@ -64,7 +65,7 @@ uid=0(root) gid=0(root) groups=0(root)
 4. Merge `docker-compose.yml` with your existing `docker-compose.yml` (`cap_add`, `cap_drop`, `entrypoint`, `environment`).
 
 ## Usage
-The `user-mirror` script combined with the `entrypoint` script mirror the host user inside the container, and `chown` objects created by Docker. This alongside preemptive creation of host bind mount objects before the Docker daemon eliminates ownership mismatches.
+The `user-mirror` script combined with the `entrypoint` script mirror the host user inside the container at runtime, and `chown` objects created by Docker. This alongside preemptive creation of host bind mount objects before the Docker daemon eliminates ownership mismatches.
 
 ```shell
 docker compose build
@@ -89,6 +90,7 @@ Run `ci` to run the test scripts in `test/` with the images in `images/` using b
 [best-practices-link]: https://www.bestpractices.dev/projects/9502
 [cicd-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml/badge.svg?branch=main
 [cicd-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml
+[downloads-badge]: https://img.shields.io/github/downloads/AJGranowski/docker-user-mirror/user-mirror?logo=github&label=Total%20downloads&labelColor=30373d&color=4078c0
 [reddit-expanded-community-filter-userscript]: https://github.com/AJGranowski/reddit-expanded-community-filter-userscript
 [scorecard-badge]: https://api.securityscorecards.dev/projects/github.com/AJGranowski/docker-user-mirror/badge
 [scorecard-link]: https://securityscorecards.dev/viewer/?uri=github.com/AJGranowski/docker-user-mirror
