@@ -45,6 +45,7 @@ jobs:
 
     - name: CI Files Changed
       id: ci-files-changed
+      if: ${{ github.ref_type != 'tag' }}
       uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
       with:
         files_yaml: |
@@ -56,6 +57,7 @@ jobs:
 
     - name: Release Files Changed
       id: release-files-changed
+      if: ${{ github.ref_type != 'tag' }}
       uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45.0.2
       with:
         files_yaml: |
