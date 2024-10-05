@@ -9,7 +9,7 @@
 </header>
 
 ## Why?
-The goal of this project is to unify bind mount permissions, regardless of the container engine context. Whether you're using rootful Docker, rootless Docker, or Podman, this project will configure your host environment and container to ensure bind mount items are owned by the host user, not root.
+The goal of this project is to unify mount permissions in and out of containers, regardless of the container engine context. Whether you're using rootful Docker, rootless Docker, or Podman, this project will configure your host environment and container to ensure mount items are owned by the host user, not root.
 
 The primary focus of this project is to improve the developer experience of working with containerized toolchains. Rather than requiring a rootless context, you can incorporate Docker User Mirror to become context agnostic!
 
