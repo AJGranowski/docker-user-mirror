@@ -68,7 +68,7 @@ jobs:
 
   ci:
     name: Continuous Integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: ${{ needs.changed-files.outputs.run-ci == 'true' }}
     strategy:
@@ -79,10 +79,11 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
-          disable-sudo: ${{ matrix.container-context != 'docker-rootless' }}
+          disable-sudo: ${{ matrix.container-context == 'docker-default' }}
           egress-policy: block
           allowed-endpoints: >
             auth.docker.io:443
+            azure.archive.ubuntu.com:80
             dl-cdn.alpinelinux.org:443
             download.docker.com:443
             files.pythonhosted.org:443
@@ -91,7 +92,6 @@ jobs:
             objects.githubusercontent.com:443
             production.cloudflare.docker.com:443
             pypi.org:443
-            quay.io:443
             registry-1.docker.io:443
 
       - name: Checkout
@@ -106,8 +106,8 @@ jobs:
         # Podman in the GitHub runner is out of date, so we either need to upgrade it ourselves or install an older version of podman-compose.
         # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
         run: |
+          sudo apt-get install python3-dotenv
           echo 'podman-compose == 1.0.6 --hash=sha256:48c92e6cdac1732422c6cfa803d8a905a61be4119dc0d41f9ed42c66826e9a78' > /tmp/requirements.txt
-          echo 'python-dotenv == 1.0.1 --hash=sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a' >> /tmp/requirements.txt
           pip3 install --require-hashes --requirement /tmp/requirements.txt
           rm /tmp/requirements.txt
 
@@ -115,7 +115,7 @@ jobs:
         id: docker-cache
         uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0
         with:
-          key: docker-${{ runner.os }}-${{ hashFiles('./images/**/Dockerfile') }}
+          key: ${{ matrix.container-context }}-${{ runner.os }}-${{ hashFiles('./images/**/Dockerfile') }}
 
       - name: Run Tests
         run: |
