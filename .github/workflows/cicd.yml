@@ -115,7 +115,7 @@ jobs:
         id: docker-cache
         uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0
         with:
-          key: docker-${{ runner.os }}-${{ hashFiles('./images/**/Dockerfile') }}
+          key: ${{ matrix.container-context }}-${{ runner.os }}-${{ hashFiles('./images/**/Dockerfile') }}
 
       - name: Run Tests
         run: |
