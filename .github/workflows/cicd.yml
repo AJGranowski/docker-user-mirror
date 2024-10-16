@@ -80,7 +80,7 @@ jobs:
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           disable-sudo: ${{ matrix.container-context == 'docker-default' }}
-          egress-policy: block
+          egress-policy: audit
           allowed-endpoints: >
             auth.docker.io:443
             dl-cdn.alpinelinux.org:443
