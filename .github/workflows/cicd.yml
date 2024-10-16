@@ -68,7 +68,7 @@ jobs:
 
   ci:
     name: Continuous Integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: changed-files
     if: ${{ needs.changed-files.outputs.run-ci == 'true' }}
     strategy:
