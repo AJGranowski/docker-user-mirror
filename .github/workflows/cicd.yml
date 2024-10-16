@@ -107,7 +107,9 @@ jobs:
         # https://github.com/containers/podman-compose/issues/980#issuecomment-2199531338
         run: |
           sudo apt-get install python3-dotenv
-          sudo apt-get install python3-podman-compose
+          echo 'podman-compose == 1.0.6 --hash=sha256:48c92e6cdac1732422c6cfa803d8a905a61be4119dc0d41f9ed42c66826e9a78' > /tmp/requirements.txt
+          pip3 install --require-hashes --requirement /tmp/requirements.txt
+          rm /tmp/requirements.txt
 
       - name: Docker Cache
         id: docker-cache
