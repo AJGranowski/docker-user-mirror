@@ -73,7 +73,7 @@ jobs:
     if: ${{ needs.changed-files.outputs.run-ci == 'true' }}
     strategy:
       matrix:
-        container-context: ["docker-default", "docker-rootless"]
+        container-context: ["docker-default", "docker-rootless", "podman"]
 
     steps:
       - name: Harden Runner
