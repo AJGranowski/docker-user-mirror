@@ -208,7 +208,7 @@ for arg do
                 set -- "$@" "$arg";
                 search_for_replace=0;
                 ;;
-            exec|run)
+            run)
                 REPLACED_COMMAND="$arg";
                 set -- "$@" "create";
                 search_for_replace=0;
