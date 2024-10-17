@@ -60,7 +60,7 @@ rm "$image_dir/Dockerfile.base-image";
 cp "$SRC_DIR/image/entrypoint" "$image_dir";
 
 # Create the image runtime context
-cp "$SRC_DIR/compose.yml" "$test_dir";
+cp "$SRC_DIR/docker-compose.yml" "$test_dir";
 cp "$SRC_DIR/user-mirror" "$test_dir";
 
 # Run the test

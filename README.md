@@ -60,9 +60,9 @@ uid=0(root) gid=0(root) groups=0(root)
 
 ## Getting Started
 1. Copy `entrypoint` to the directory of your Dockerfile.
-2. Copy `user-mirror` to the directory of your `compose.yml`.
+2. Copy `user-mirror` to the directory of your `docker-compose.yml`.
 3. Append `Dockerfile.user-mirror` to your Dockerfile.
-4. Merge `compose.yml` with your existing `compose.yml` (`cap_add`, `cap_drop`, `entrypoint`, `environment`).
+4. Merge `docker-compose.yml` with your existing `docker-compose.yml` (`cap_add`, `cap_drop`, `entrypoint`, `environment`).
 
 ## Usage
 The `user-mirror` script combined with the `entrypoint` script mirror the host user inside the container at runtime, and `chown` objects created by Docker. This alongside preemptive creation of host bind mount objects before the Docker daemon eliminates ownership mismatches.

@@ -123,8 +123,8 @@ while [ $# -gt 0 ]; do
             COMPOSE_ENGINE='docker compose';
             CONTAINER_ENGINE='docker';
             ;;
-        --compose)
-            COMPOSE_ENGINE='compose';
+        --docker-compose)
+            COMPOSE_ENGINE='docker-compose';
             CONTAINER_ENGINE='docker';
             ;;
         --podman)
@@ -171,8 +171,8 @@ fi
 # Parse the command if no engine declared.
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     case $1 in
-        compose)
-            COMPOSE_ENGINE='compose';
+        docker-compose)
+            COMPOSE_ENGINE='docker-compose';
             CONTAINER_ENGINE='docker';
             ;;
         podman)
