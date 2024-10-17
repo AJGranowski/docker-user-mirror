@@ -2,8 +2,8 @@
 THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 . "$THIS_SCRIPT_DIR/../scripts/test-utilities";
 
-mv docker-compose.yml docker-compose1.yml;
-cat <<EOF > docker-compose2.yml
+mv compose.yml compose1.yml;
+cat <<EOF > compose2.yml
 services:
   sh:
     volumes:
@@ -12,9 +12,9 @@ services:
         target: /docker-user-mirror/.npmrc
 EOF
 
-$COMPOSE_ENGINE -f docker-compose1.yml -f docker-compose2.yml config > docker-compose.yml;
-rm docker-compose1.yml;
-rm docker-compose2.yml;
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
+rm compose1.yml;
+rm compose2.yml;
 
 touch docker.npmrc;
 
