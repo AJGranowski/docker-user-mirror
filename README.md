@@ -77,6 +77,14 @@ podman compose build
 ./user-mirror podman compose run --rm {service}
 ```
 
+## How?
+This projects uses a pair of scripts to prepare both the host and container environment in a few steps:
+1. `user-mirror`: Create mount source items on the host before Docker does (so they're owned by the current host user rather than root).
+2. `user-mirror`: Inject environment variables into the Docker/Podman command.
+3. `entrypoint`: Create a mirrored host user in the container at runtime.
+4. `entrypoint`: `chown` mount destination items in the container to the mirrored user.
+5. `entrypoint`: Step-down from root to the mirrored user to execute the command.
+
 ## Development
 Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker Compose and Podman Compose (if installed).
 
