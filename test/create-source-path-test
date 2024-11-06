@@ -1,0 +1,43 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+
+mv compose.yml compose1.yml;
+cat <<EOF > compose2.yml
+services:
+  sh:
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./create
+        target: /docker-user-mirror/create
+        bind:
+          create_host_path: true
+      - type: bind
+        read_only: true
+        source: ./do-not-create
+        target: /docker-user-mirror/do-not-create
+        bind:
+          create_host_path: false
+volumes:
+  volume:
+EOF
+
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
+rm compose1.yml;
+rm compose2.yml;
+
+$COMPOSE_ENGINE build;
+if ./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true' 2>/dev/null; then
+    printf 'Run succeeded when it should have failed (expected failure when do-not-create.file does not exist)' >&2;
+    exit 1;
+fi
+
+mkdir do-not-create;
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
+
+# Test directory exists
+if ! [ -d create ]; then
+    printf 'directory "%s" not found\n' 'create' >&2;
+    exit 1;
+fi
