@@ -24,8 +24,6 @@ services:
         target: /docker-user-mirror/do-not-create
         bind:
           create_host_path: false
-volumes:
-  volume:
 EOF
 
 $COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
