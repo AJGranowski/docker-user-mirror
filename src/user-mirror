@@ -249,7 +249,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
         # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
         CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
 
-        # Loop through bind mounts that are read/write, and mkdir those source paths on the host.
+        # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
         while read create_path; do
             if [ -z "$create_path" ]; then
                 break;
@@ -257,7 +257,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
 
             mkdir -p "$create_path" >/dev/null 2>&1 || true;
         done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .RW}}{{println .Source}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
+$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
 EOF
         # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
         #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
