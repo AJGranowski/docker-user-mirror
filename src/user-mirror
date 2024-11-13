@@ -4,7 +4,7 @@
 set -eC;
 VERSION='development';
 
-# Create a container and return the container ID.
+# Create container(s) and return the container ID(s).
 container_create() {
     if [ -n "$REPLACED_COMMAND" ]; then
         "$@";
@@ -15,6 +15,65 @@ container_create() {
         $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1;
         $COMPOSE_ENGINE --progress quiet ps -a --status created --format '{{.ID}}';
     fi
+}
+
+# Create host items and populate chown list
+# Args: container ID (retrieved from container_create)
+prepare_environment() {
+    # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
+    if [ -z "$CHOWN_LIST" ]; then
+        CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$1")";
+    else
+        CHOWN_LIST="$CHOWN_LIST $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$1")";
+    fi
+
+    # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
+    while read create_path; do
+        if [ -z "$create_path" ]; then
+            break;
+        fi
+
+        mkdir -p "$create_path" >/dev/null 2>&1 || true;
+    done <<EOF
+$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")
+EOF
+    # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
+    #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
+    while read edge_source; do
+        if [ -z "$edge_source" ]; then
+            break;
+        fi
+
+        read edge_destination;
+
+        while read node_source; do
+            if [ -z "$node_source" ]; then
+                break;
+            fi
+
+            read node_destination;
+
+            # Find replace
+            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
+
+            if [ "$resolved_node_destination" = "$node_destination" ]; then
+                # Skip this pair if no resolution was made.
+                continue;
+            fi
+
+            if [ -f "$node_source" ]; then
+                mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true;
+                touch "$resolved_node_destination";
+            else
+                mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
+            fi
+        done <<EOF
+$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")
+EOF
+
+    done <<EOF
+$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")
+EOF
 }
 
 # Download a release file.
@@ -246,56 +305,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
     # Parse mount information by creating a container and parsing it (but not starting it).
     if TEMP_CONTAINER_ID="$(container_create "$@")"; then
 
-        # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
-        CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$TEMP_CONTAINER_ID")";
-
-        # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
-        while read create_path; do
-            if [ -z "$create_path" ]; then
-                break;
-            fi
-
-            mkdir -p "$create_path" >/dev/null 2>&1 || true;
-        done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
-EOF
-        # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
-        #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
-        while read edge_source; do
-            if [ -z "$edge_source" ]; then
-                break;
-            fi
-
-            read edge_destination;
-
-            while read node_source; do
-                if [ -z "$node_source" ]; then
-                    break;
-                fi
-
-                read node_destination;
-
-                # Find replace
-                resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
-
-                if [ "$resolved_node_destination" = "$node_destination" ]; then
-                    # Skip this pair if no resolution was made.
-                    continue;
-                fi
-
-                if [ -f "$node_source" ]; then
-                    mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true;
-                    touch "$resolved_node_destination";
-                else
-                    mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
-                fi
-            done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$TEMP_CONTAINER_ID")
-EOF
-
-        done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$TEMP_CONTAINER_ID")
-EOF
+        prepare_environment "$TEMP_CONTAINER_ID"
 
         # Cleanup.
         $CONTAINER_ENGINE container rm "$TEMP_CONTAINER_ID" >/dev/null 2>&1;
