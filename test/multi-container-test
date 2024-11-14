@@ -1,0 +1,75 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+
+mv compose.yml compose1.yml;
+cat <<EOF > compose2.yml
+x-docker-user-mirror-environment: &x-docker-user-mirror-environment
+services:
+  a:
+    extends:
+      file: compose1.yml
+      service: sh
+    volumes:
+      - type: volume
+        source: volume
+        target: /docker-user-mirror/a
+  b:
+    extends:
+      file: compose1.yml
+      service: sh
+    volumes:
+      - type: volume
+        source: volume
+        target: /docker-user-mirror/b
+volumes:
+  volume:
+EOF
+
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
+rm compose1.yml;
+rm compose2.yml;
+
+cat compose.yml
+
+$COMPOSE_ENGINE build;
+./user-mirror $COMPOSE_ENGINE up a b;
+
+# Test directory exists
+if ! [ -d a ]; then
+    printf 'directory "%s" not found\n' 'a' >&2;
+    exit 1;
+fi
+
+# Test directory exists
+if ! [ -d b ]; then
+    printf 'directory "%s" not found\n' 'b' >&2;
+    exit 1;
+fi
+
+# Test file ownership matches the current user
+user_uid=$(id -u);
+user_gid=$(id -g);
+directory_owner_uid=$(stat -c "%u" a);
+directory_owner_gid=$(stat -c "%g" a);
+if ! [ $directory_owner_uid -eq $user_uid ]; then
+    printf 'Ownership UID for "a" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2;
+    exit 1;
+fi
+if ! [ $directory_owner_gid -eq $user_gid ]; then
+    printf 'Ownership GID for "a" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
+    exit 1;
+fi
+
+directory_owner_uid=$(stat -c "%u" b);
+directory_owner_gid=$(stat -c "%g" b);
+if ! [ $directory_owner_uid -eq $user_uid ]; then
+    printf 'Ownership UID for "b" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2;
+    exit 1;
+fi
+if ! [ $directory_owner_gid -eq $user_gid ]; then
+    printf 'Ownership GID for "b" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
+    exit 1;
+fi
+
+$COMPOSE_ENGINE down;

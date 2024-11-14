@@ -17,6 +17,49 @@ container_create() {
     fi
 }
 
+# Download a release file.
+# Args: release filename, output filename, release tag (defaults to latest release it not provided)
+download_file() {
+    if [ $# -eq 3 ]; then
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
+    elif [ $# -eq 2 ]; then
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
+    else
+        echo 'Expected at least two arguments.' >&2;
+        return 1;
+    fi
+}
+
+# Query GitHub for the latest release tag.
+get_latest_release_tag() {
+    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')";
+    case "$(echo "$response" | tail -1)" in
+        2*)
+            echo "$response" | \
+            grep -E '^\s*"tag_name":' | \
+            sed -E 's/.*"tag_name": "([^"]+)".*/\1/g'
+        ;;
+        *) false;;
+    esac
+}
+
+# Get the version ID of a release.
+# Args: release tag (defaults to latest release it not provided)
+get_release_version() {
+    if [ $# -eq 0 ]; then
+        response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
+    else
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
+    fi
+
+    case "$(echo "$response" | tail -1)" in
+        2*)
+            echo "$response" | head -1
+            ;;
+        *) false;;
+    esac
+}
+
 # Create host items and populate chown list
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
@@ -74,49 +117,6 @@ EOF
     done <<EOF
 $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")
 EOF
-}
-
-# Download a release file.
-# Args: release filename, output filename, release tag (defaults to latest release it not provided)
-download_file() {
-    if [ $# -eq 3 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
-    elif [ $# -eq 2 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
-    else
-        echo 'Expected at least two arguments.' >&2;
-        return 1;
-    fi
-}
-
-# Query GitHub for the latest release tag.
-get_latest_release_tag() {
-    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')";
-    case "$(echo "$response" | tail -1)" in
-        2*)
-            echo "$response" | \
-            grep -E '^\s*"tag_name":' | \
-            sed -E 's/.*"tag_name": "([^"]+)".*/\1/g'
-        ;;
-        *) false;;
-    esac
-}
-
-# Get the version ID of a release.
-# Args: release tag (defaults to latest release it not provided)
-get_release_version() {
-    if [ $# -eq 0 ]; then
-        response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
-    else
-        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
-    fi
-
-    case "$(echo "$response" | tail -1)" in
-        2*)
-            echo "$response" | head -1
-            ;;
-        *) false;;
-    esac
 }
 
 # Query GitHub to check if a release tag exists.
@@ -302,14 +302,16 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
     HOST_MAPPED_USER="$(id -un)";
     HOST_MAPPED_UID="$(id -u)";
 
-    # Parse mount information by creating a container and parsing it (but not starting it).
-    if TEMP_CONTAINER_ID="$(container_create "$@")"; then
-
-        prepare_environment "$TEMP_CONTAINER_ID"
+    # Loop through the containers created by this command.
+    while read temp_container_id; do
+        prepare_environment "$temp_container_id"
 
         # Cleanup.
-        $CONTAINER_ENGINE container rm "$TEMP_CONTAINER_ID" >/dev/null 2>&1;
-    fi
+        $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null 2>&1;
+        break; # TODO: remove
+    done <<EOF
+$(container_create "$@")
+EOF
 else
     HOST_MAPPED_GROUP='root';
     HOST_MAPPED_GID=0;
