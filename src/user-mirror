@@ -308,7 +308,6 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
 
         # Cleanup.
         $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null 2>&1;
-        break; # TODO: remove
     done <<EOF
 $(container_create "$@")
 EOF
