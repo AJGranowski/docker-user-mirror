@@ -30,6 +30,7 @@ rm compose2.yml;
 
 $COMPOSE_ENGINE build;
 ./user-mirror $COMPOSE_ENGINE up a b;
+$COMPOSE_ENGINE down;
 
 # Test directory exists
 if ! [ -d a ]; then
@@ -67,5 +68,3 @@ if ! [ $directory_owner_gid -eq $user_gid ]; then
     printf 'Ownership GID for "b" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
     exit 1;
 fi
-
-$COMPOSE_ENGINE down;
