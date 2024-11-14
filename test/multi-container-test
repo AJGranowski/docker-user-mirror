@@ -37,7 +37,7 @@ EOF
 #      --variables               Print model variables and default values.
 #      --volumes                 Print the volume names, one per line.
 
-$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config --no-normalize --no-interpolate -o compose.yml;
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config --no-normalize -o compose.yml;
 rm compose1.yml;
 rm compose2.yml;
 
