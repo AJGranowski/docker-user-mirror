@@ -29,7 +29,7 @@ rm compose1.yml;
 rm compose2.yml;
 
 $COMPOSE_ENGINE build;
-./user-mirror $COMPOSE_ENGINE up --wait a b;
+./user-mirror $COMPOSE_ENGINE up --no-attach a b;
 $COMPOSE_ENGINE down;
 
 # Test directory exists
