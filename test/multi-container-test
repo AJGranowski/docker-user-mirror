@@ -4,29 +4,40 @@ THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 
 mv compose.yml compose1.yml;
 cat <<EOF > compose2.yml
-x-docker-user-mirror-environment: &x-docker-user-mirror-environment
 services:
   a:
     extends:
       file: compose1.yml
       service: sh
     volumes:
-      - type: volume
-        source: volume
-        target: /docker-user-mirror/a
+      - ./:/docker-user-mirror/a
   b:
     extends:
       file: compose1.yml
       service: sh
     volumes:
-      - type: volume
-        source: volume
-        target: /docker-user-mirror/b
-volumes:
-  volume:
+      - ./:/docker-user-mirror/b
 EOF
 
-$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
+#Options:
+#      --dry-run                 Execute command in dry run mode
+#      --environment             Print environment used for interpolation.
+#      --format string           Format the output. Values: [yaml | json] (default "yaml")
+#      --hash string             Print the service config hash, one per line.
+#      --images                  Print the image names, one per line.
+#      --no-consistency          Don't check model consistency - warning: may produce invalid Compose output
+#      --no-interpolate          Don't interpolate environment variables
+#      --no-normalize            Don't normalize compose model
+#      --no-path-resolution      Don't resolve file paths
+#  -o, --output string           Save to file (default to stdout)
+#      --profiles                Print the profile names, one per line.
+#  -q, --quiet                   Only validate the configuration, don't print anything
+#      --resolve-image-digests   Pin image tags to digests
+#      --services                Print the service names, one per line.
+#      --variables               Print model variables and default values.
+#      --volumes                 Print the volume names, one per line.
+
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config --no-normalize --no-interpolate -o compose.yml;
 rm compose1.yml;
 rm compose2.yml;
 
