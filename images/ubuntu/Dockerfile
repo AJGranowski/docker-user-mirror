@@ -1,1 +1,1 @@
-FROM ubuntu:24.10@sha256:eea047b4b181f2d3aeafbc0ce5294a2bbb3b98153a68b9ed4bc573d871ca9450
+FROM ubuntu:25.04@sha256:76d816faff9ffc55af334ac9a26808b021607fffc1a7c4e6fcb3d488d410fdb6
