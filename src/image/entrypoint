@@ -5,6 +5,7 @@ set -eC;
 
 VERSION='development';
 exec 3>/dev/null;
+exec 4>/dev/null;
 
 check_gosu() {
     command -v gosu && \
