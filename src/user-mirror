@@ -163,7 +163,7 @@ update() {
 
     echo 'Installing update...';
     download_file 'user-mirror' "${0}.tmp";
-    mv "${0}.tmp" "$0" && echo "${latest_version} installed!"; exit 0;
+    mv "${0}.tmp" "$0" && chmod +x "$0" && echo "${latest_version} installed!"; exit 0;
 }
 
 # Convert "$VERSION" to "release-**" format.
