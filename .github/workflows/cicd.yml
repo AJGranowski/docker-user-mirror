@@ -55,9 +55,15 @@ jobs:
               - "!.github/**"
               - ".github/workflows/*.yml"
 
+      - name: Skip Auto Release
+        run: |
+          case "$(git show -s --format=%b "$GITHUB_REF")" in
+            *#skip-auto-release*) echo 'SKIP_AUTO_RELEASE=true' >> "$GITHUB_ENV";;
+          esac
+
       - name: Release Files Changed
         id: release-files-changed
-        if: ${{ github.ref_type != 'tag' }}
+        if: ${{ github.ref_type != 'tag' && env.SKIP_AUTO_RELEASE != 'true' }}
         uses: tj-actions/changed-files@d6e91a2266cdb9d62096cebf1e8546899c6aa18f # v45.0.6
         with:
           files_yaml: |
