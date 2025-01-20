@@ -369,4 +369,4 @@ if [ -n "$CHOWN_LIST" ]; then
     export CHOWN_LIST;
 fi
 
-"$@";
+exec "$@";
