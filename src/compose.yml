@@ -13,7 +13,7 @@ services:
       - CAP_DAC_OVERRIDE # Needed for Podman.
 
     cap_drop: [ALL]
-    entrypoint: [/entrypoint, --, sh]
+    entrypoint: [/entrypoint, --verbose, --, sh]
     environment:
       CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
       CHOWN_LIST: # Set by Docker User Mirror
