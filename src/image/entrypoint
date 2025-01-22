@@ -243,6 +243,7 @@ else
     echo "HOST_MAPPED_GID=$HOST_MAPPED_GID" >&3;
     echo "HOST_MAPPED_USER=$HOST_MAPPED_USER" >&3;
     echo "HOST_MAPPED_UID=$HOST_MAPPED_UID" >&3;
+    echo "SERVICE_NAME=$SERVICE_NAME" >&3;
 
     # Create/replace user if non-root.
     if [ $HOST_MAPPED_UID -ne 0 ] && [ "$HOST_MAPPED_USER" != 'root' ]; then
