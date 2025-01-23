@@ -8,15 +8,34 @@
     <p align="center">Mirror host user ownership in and out of rootful Docker containers.</p>
 </header>
 
-## Why?
-The goal of this project is to unify mount permissions in and out of containers, regardless of the container engine context. Whether you're using rootful Docker, rootless Docker, or Podman, this project will configure your host environment and container to ensure mount items are owned by the host user, not root.
+## How It Works
+This projects uses a pair of scripts to mirror the host user in a container:
 
-The primary focus of this project is to improve the developer experience of working with containerized toolchains. Rather than requiring a rootless context, you can incorporate Docker User Mirror to become context agnostic!
-
-#### Example
-Lets say you want to mount a volume inside a bind mount.
 ```shell
+docker compose build
+./user-mirror docker compose run --rm {{service}}
+```
+
+1. `entrypoint` (build time): Install `setpriv` or `gosu`.
+2. `user-mirror`: Create mount source items on the host before Docker does (so they're owned by the current host user rather than root).
+3. `user-mirror`: Inject environment variables into the Docker/Podman command and run it.
+4. `entrypoint` (run time): Create a mirrored host user in the container from the injected environment variables.
+5. `entrypoint` (run time): `chown` mount destination items in the container to the mirrored user.
+6. `entrypoint` (run time): Step-down from root to the mirrored user to execute the command.
+
+## Getting Started
+1. Copy the `entrypoint` script to the directory of your Dockerfile.
+2. Copy the `user-mirror` script to the root of your project.
+3. Append `Dockerfile.user-mirror` to your project's Dockerfile.
+4. Add `cap_add`, `cap_drop`, and `environment` from `compose.yml` to your project's compose file.
+5. Prepend your project's compose entrypoint with `[/entrypoint, --,` ...
+
+## Why?
+Lets say you want to mount a volume inside a bind mount.
+```
 -v ./:/app -v /app/volume
+      ↑            ↖ volume mount within the exiting bind mount (/app)
+  bind mount
 ```
 
 Here's what would happen with rootful Docker on Linux systems:
@@ -51,39 +70,14 @@ uid=1000(user) gid=1000(user) groups=1000(user)
 755 user:user volume (host)      ⇐🥳
 ```
 
-It even works with rootless Docker and Podman!
+Also compatible with rootless Docker and Podman!
 ```
 uid=0(root) gid=0(root) groups=0(root)
 755 root:root volume (container)
 755 user:user volume (host)
 ```
 
-## Getting Started
-1. Copy `entrypoint` to the directory of your Dockerfile.
-2. Copy `user-mirror` to the directory of your `compose.yml`.
-3. Append `Dockerfile.user-mirror` to your Dockerfile.
-4. Merge `compose.yml` with your existing `compose.yml` (`cap_add`, `cap_drop`, `entrypoint`, `environment`).
-
-## Usage
-The `user-mirror` script combined with the `entrypoint` script mirror the host user inside the container at runtime, and `chown` objects created by Docker. This alongside preemptive creation of host bind mount objects before the Docker daemon eliminates ownership mismatches.
-
-```shell
-docker compose build
-./user-mirror docker compose run --rm {service}
-```
-
-```shell
-podman compose build
-./user-mirror podman compose run --rm {service}
-```
-
-## How?
-This projects uses a pair of scripts to prepare both the host and container environment in a few steps:
-1. `user-mirror`: Create mount source items on the host before Docker does (so they're owned by the current host user rather than root).
-2. `user-mirror`: Inject environment variables into the Docker/Podman command.
-3. `entrypoint`: Create a mirrored host user in the container at runtime.
-4. `entrypoint`: `chown` mount destination items in the container to the mirrored user.
-5. `entrypoint`: Step-down from root to the mirrored user to execute the command.
+The big benefit to using this project over [other workarounds](https://github.com/moby/moby/issues/2259) is that it's all automatic. The file ownership fixes are all inferred directly from your command or compose specification.
 
 ## Development
 Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker Compose and Podman Compose (if installed).
