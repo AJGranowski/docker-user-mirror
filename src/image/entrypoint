@@ -308,7 +308,6 @@ else
             continue;
         fi
 
-        echo "chown -c \"$HOST_MAPPED_UID:$HOST_MAPPED_GID\" \"$chown_path\"";
         chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$chown_path" >&3;
     done <<EOF
 $CHOWN_LIST
