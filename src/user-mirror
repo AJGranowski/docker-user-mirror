@@ -336,7 +336,7 @@ for arg do
                     set -- "$@" "$arg";
                 fi
 
-                set -- "$@" '-e' "HOST_MAPPED_GID=$HOST_MAPPED_GID" '-e' "HOST_MAPPED_GROUP=$HOST_MAPPED_GROUP" '-e' "HOST_MAPPED_UID=$HOST_MAPPED_GROUP" '-e' "HOST_MAPPED_USER=$HOST_MAPPED_USER";
+                set -- "$@" '-e' "HOST_MAPPED_GID=$HOST_MAPPED_GID" '-e' "HOST_MAPPED_GROUP=$HOST_MAPPED_GROUP" '-e' "HOST_MAPPED_UID=$HOST_MAPPED_UID" '-e' "HOST_MAPPED_USER=$HOST_MAPPED_USER";
                 if [ -n "$CHOWN_LIST" ]; then
                     set -- "$@" '-e' "CHOWN_LIST=$CHOWN_LIST";
                 fi

@@ -212,7 +212,7 @@ if [ "$o_setup" = true ]; then
         fi
     fi
 else
-    set -exC;
+    set -eC;
 
     if [ -z "$HOST_MAPPED_GID" ]; then
         printf 'HOST_MAPPED_GID is unset\n' >&2;
