@@ -243,6 +243,7 @@ else
     echo "HOST_MAPPED_GID=$HOST_MAPPED_GID" >&3;
     echo "HOST_MAPPED_USER=$HOST_MAPPED_USER" >&3;
     echo "HOST_MAPPED_UID=$HOST_MAPPED_UID" >&3;
+    echo "SERVICE_NAME=$SERVICE_NAME" >&3;
 
     # Create/replace user if non-root.
     if [ $HOST_MAPPED_UID -ne 0 ] && [ "$HOST_MAPPED_USER" != 'root' ]; then
@@ -285,9 +286,32 @@ else
     fi
 
     # Set the ownership of a set of items to the user.
-    if [ -n "$CHOWN_LIST" ]; then
-        echo "$CHOWN_LIST" | xargs chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" >&3 2>&4 || true;
-    fi
+    while read service_name; do
+        if [ -z "$service_name" ]; then
+            continue;
+        fi
+
+        case $service_name in
+            /*)
+                chown_path="$service_name";
+                unset service_name;
+                ;;
+            *) read chown_path;;
+        esac
+
+        if [ -n "$service_name" ] && [ "$service_name" != "$SERVICE_NAME" ]; then
+            continue;
+        fi
+
+        if ! [ -e "$chown_path" ]; then
+            printf "cannot access '%s': No such file or directory\n" "$chown_path" >&4;
+            continue;
+        fi
+
+        chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$chown_path" >&3;
+    done <<EOF
+$CHOWN_LIST
+EOF
 
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then

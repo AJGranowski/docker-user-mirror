@@ -21,6 +21,7 @@ services:
       HOST_MAPPED_GID: # Set by Docker User Mirror
       HOST_MAPPED_USER: # Set by Docker User Mirror
       HOST_MAPPED_UID: # Set by Docker User Mirror
+      SERVICE_NAME: sh # Used to filter CHOWN_LIST with Docker User Mirror
 
     network_mode: none
     volumes:

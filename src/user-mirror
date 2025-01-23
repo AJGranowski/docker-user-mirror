@@ -63,12 +63,12 @@ get_release_version() {
 # Create host items and populate chown list
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
+    # Grab the SERVICE_NAME environment variable if it exists.
+    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 13) (eq (slice . 0 13) "SERVICE_NAME=")}}{{slice . 13}}{{end}}{{end}}' "$1")";
+
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
-    if [ -z "$CHOWN_LIST" ]; then
-        CHOWN_LIST="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$1")";
-    else
-        CHOWN_LIST="$CHOWN_LIST $($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}"{{print .Destination}}" {{end}}{{end}}' "$1")";
-    fi
+    CHOWN_LIST="$CHOWN_LIST
+$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"$service_name\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
     while read create_path; do
