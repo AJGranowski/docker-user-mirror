@@ -249,6 +249,8 @@ else
 
     # Create/replace user if non-root.
     if [ "$host_user_id" -ne 0 ] && [ "$host_user_name" != 'root' ]; then
+        export SHELL='/bin/sh';
+
         uid_username="$(awk -F: "\$3 == ${host_user_id} {print \$1}" /etc/passwd)";
         if id -u "$uid_username" >/dev/null 2>&1; then
             echo "Removing user matching UID ${host_user_id}: $(print_user $uid_username)" >&3;
@@ -267,16 +269,19 @@ else
         gid_groupname="$(awk -F: "\$3 == ${host_user_gid} {print \$1}" /etc/group)";
 
         if command -v useradd >/dev/null; then
-            useradd -c 'Mirrored Host User' -g "$host_user_gid" -m -s /bin/sh -u "$host_user_id" "$host_user_name" 2>&4;
+            useradd -c 'Mirrored Host User' -g "$host_user_gid" -m -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         else
-            adduser -c 'Mirrored Host User' -D -G "$gid_groupname" -s /bin/sh -u "$host_user_id" "$host_user_name" 2>&4;
+            adduser -c 'Mirrored Host User' -D -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         fi
         echo "Created user: $(print_user "$host_user_name")" >&3;
 
-        HOME_DIR="/home/${host_user_name}";
+        export HOME="/home/${host_user_name}";
     else
-        HOME_DIR="/root";
+        export HOME='/root';
     fi
+
+    export LOGNAME="$host_user_name";
+    export USER="$host_user_name";
 
     # Set the ownership of a set of items to the user.
     while read service_name; do
@@ -306,19 +311,24 @@ else
 $CHOWN_LIST
 EOF
 
+    if [ -n "$CAPABILITIES" ]; then
+        capabilities="-all,$CAPABILITIES";
+    else
+        capabilities='-all';
+    fi
+
+    unset CAPABILITIES;
+    unset CHOWN_LIST;
+    unset HOST_USER;
+    unset SERVICE_NAME;
+
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then
-        if [ -n "$CAPABILITIES" ]; then
-            capabilities="-all,$CAPABILITIES";
-        else
-            capabilities='-all';
-        fi
-
-        echo "HOME=${HOME_DIR} LOGNAME=${host_user_name} SHELL=/bin/sh USER=${host_user_name} exec setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} ..." >&3;
-        HOME="$HOME_DIR" LOGNAME="$host_user_name" SHELL='/bin/sh' USER="$host_user_name" exec setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} "$@";
+        echo "exec setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} ..." >&3;
+        exec setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} "$@";
     elif command -v gosu >/dev/null; then
-        echo "HOME=${HOME_DIR} LOGNAME=${host_user_name} SHELL=/bin/sh USER=${host_user_name} exec gosu \"${host_user_id}:${host_user_gid}\" ..." >&3;
-        HOME="$HOME_DIR" LOGNAME="$host_user_name" SHELL='/bin/sh' USER="$host_user_name" exec gosu "${host_user_id}:${host_user_gid}" "$@";
+        echo "exec gosu \"${host_user_id}:${host_user_gid}\" ..." >&3;
+        exec gosu "${host_user_id}:${host_user_gid}" "$@";
     else
         printf 'Unable to set user\n' >&2;
         exit 1;
