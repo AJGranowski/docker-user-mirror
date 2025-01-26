@@ -271,7 +271,7 @@ else
         if command -v useradd >/dev/null; then
             useradd -c 'Mirrored Host User' -g "$host_user_gid" -m -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         else
-            adduser -c 'Mirrored Host User' -D -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
+            adduser -D -g 'Mirrored Host User' -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         fi
         echo "Created user: $(print_user "$host_user_name")" >&3;
 
