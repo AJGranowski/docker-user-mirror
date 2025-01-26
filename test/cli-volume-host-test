@@ -4,7 +4,7 @@ THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
 
 $COMPOSE_ENGINE build;
 mkdir volume
-./user-mirror $COMPOSE_ENGINE run --rm --volume /docker-user-mirror/volume/ --env CHOWN_LIST='/docker-user-mirror/volume/' sh -c 'true';
+./user-mirror $COMPOSE_ENGINE run --rm --volume /docker-user-mirror/volume/ - sh -c 'true';
 
 # Test directory exists
 if ! [ -d volume ]; then
