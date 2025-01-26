@@ -15,13 +15,10 @@ services:
     cap_drop: [ALL]
     entrypoint: [/entrypoint, --, sh]
     environment:
-      CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
-      CHOWN_LIST: # Set by Docker User Mirror
-      HOST_MAPPED_GROUP: # Set by Docker User Mirror
-      HOST_MAPPED_GID: # Set by Docker User Mirror
-      HOST_MAPPED_USER: # Set by Docker User Mirror
-      HOST_MAPPED_UID: # Set by Docker User Mirror
-      SERVICE_NAME: sh # Used to filter CHOWN_LIST with Docker User Mirror
+      USER_MIRROR_CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
+      USER_MIRROR_CHOWN_LIST: # Set by Docker User Mirror
+      USER_MIRROR_HOST_USER: # Set by Docker User Mirror
+      USER_MIRROR_SERVICE_NAME: service-name # USER_MIRROR_CHOWN_LIST filter used by Docker User Mirror
 
     network_mode: none
     volumes:

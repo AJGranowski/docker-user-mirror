@@ -19,6 +19,21 @@ check_setpriv() {
     setpriv --reuid="$(id -u nobody)" --regid="$(id -g nobody)" --clear-groups true;
 }
 
+# Split strings by a delimiter and extract an index. Uses space as a delimiter by default.
+extract_index() (
+    str="$1";
+    count="${2:-0}";
+    delimiter="${3:- }";
+    while [ $count -gt 0 ]; do
+        : $((count -= 1));
+        case "$str" in
+            *${delimiter}*) str="${str#*${delimiter}}";;
+            *) str='';;
+        esac
+    done
+    echo "${str%%${delimiter}*}";
+)
+
 # Download a release file.
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
 download_file() {
@@ -214,23 +229,8 @@ if [ "$o_setup" = true ]; then
 else
     set -eC;
 
-    if [ -z "$HOST_MAPPED_GID" ]; then
-        printf 'HOST_MAPPED_GID is unset\n' >&2;
-        guard_failure=true;
-    fi
-
-    if [ -z "$HOST_MAPPED_GROUP" ]; then
-        printf 'HOST_MAPPED_GROUP is unset\n' >&2;
-        guard_failure=true;
-    fi
-
-    if [ -z "$HOST_MAPPED_UID" ]; then
-        printf 'HOST_MAPPED_UID is unset\n' >&2;
-        guard_failure=true;
-    fi
-
-    if [ -z "$HOST_MAPPED_USER" ]; then
-        printf 'HOST_MAPPED_USER is unset\n' >&2;
+    if [ -z "$USER_MIRROR_HOST_USER" ]; then
+        printf 'USER_MIRROR_HOST_USER is unset\n' >&2;
         guard_failure=true;
     fi
 
@@ -238,27 +238,22 @@ else
         exit 1;
     fi
 
-    echo "CAPABILITIES=$CAPABILITIES" >&3;
-    echo "HOST_MAPPED_GROUP=$HOST_MAPPED_GROUP" >&3;
-    echo "HOST_MAPPED_GID=$HOST_MAPPED_GID" >&3;
-    echo "HOST_MAPPED_USER=$HOST_MAPPED_USER" >&3;
-    echo "HOST_MAPPED_UID=$HOST_MAPPED_UID" >&3;
-    echo "SERVICE_NAME=$SERVICE_NAME" >&3;
+    echo "USER_MIRROR_CAPABILITIES=${USER_MIRROR_CAPABILITIES}" >&3;
+    echo "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}" >&3;
+    echo "USER_MIRROR_SERVICE_NAME=${USER_MIRROR_SERVICE_NAME}" >&3;
+
+    host_user_name="$(extract_index "$USER_MIRROR_HOST_USER" 0 ':')";
+    host_user_id="$(extract_index "$USER_MIRROR_HOST_USER" 1 ':')";
+    host_user_group="$(extract_index "$USER_MIRROR_HOST_USER" 2 ':')";
+    host_user_gid="$(extract_index "$USER_MIRROR_HOST_USER" 3 ':')";
 
     # Create/replace user if non-root.
-    if [ $HOST_MAPPED_UID -ne 0 ] && [ "$HOST_MAPPED_USER" != 'root' ]; then
-        if id -u "$HOST_MAPPED_USER" >/dev/null 2>&1; then
-            echo "Removing user matching $HOST_MAPPED_USER: $(print_user $HOST_MAPPED_USER)" >&3;
-            if command -v userdel >/dev/null; then
-                userdel "$HOST_MAPPED_USER";
-            else
-                deluser "$HOST_MAPPED_USER" 2>/dev/null;
-            fi
-        fi
+    if [ "$host_user_id" -ne 0 ] && [ "$host_user_name" != 'root' ]; then
+        export SHELL='/bin/sh';
 
-        uid_username="$(awk -F: "\$3 == $HOST_MAPPED_UID {print \$1}" /etc/passwd)";
+        uid_username="$(awk -F: "\$3 == ${host_user_id} {print \$1}" /etc/passwd)";
         if id -u "$uid_username" >/dev/null 2>&1; then
-            echo "Removing user matching UID $HOST_MAPPED_UID: $(print_user $uid_username)" >&3;
+            echo "Removing user matching UID ${host_user_id}: $(print_user $uid_username)" >&3;
             if command -v userdel >/dev/null; then
                 userdel "$uid_username";
             else
@@ -267,23 +262,26 @@ else
         fi
 
         if command -v groupadd >/dev/null; then
-            groupadd -g $HOST_MAPPED_GID "$HOST_MAPPED_GROUP" || true;
+            groupadd -g "$host_user_gid" "$host_user_group" || true;
         else
-            addgroup -g $HOST_MAPPED_GID "$HOST_MAPPED_GROUP" || true;
+            addgroup -g "$host_user_gid" "$host_user_group" || true;
         fi
-        gid_groupname="$(awk -F: "\$3 == $HOST_MAPPED_GID {print \$1}" /etc/group)";
+        gid_groupname="$(awk -F: "\$3 == ${host_user_gid} {print \$1}" /etc/group)";
 
         if command -v useradd >/dev/null; then
-            useradd -g $HOST_MAPPED_GID -m -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&4;
+            useradd -c 'Mirrored Host User' -g "$host_user_gid" -m -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         else
-            adduser -D -G "$gid_groupname" -s /bin/sh -u $HOST_MAPPED_UID $HOST_MAPPED_USER 2>&4;
+            adduser -D -g 'Mirrored Host User' -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         fi
-        echo "Created user: $(print_user "$HOST_MAPPED_USER")" >&3;
+        echo "Created user: $(print_user "$host_user_name")" >&3;
 
-        HOME_DIR="/home/$HOST_MAPPED_USER";
+        export HOME="/home/${host_user_name}";
     else
-        HOME_DIR="/root";
+        export HOME='/root';
     fi
+
+    export LOGNAME="$host_user_name";
+    export USER="$host_user_name";
 
     # Set the ownership of a set of items to the user.
     while read service_name; do
@@ -299,33 +297,38 @@ else
             *) read chown_path;;
         esac
 
-        if [ -n "$service_name" ] && [ "$service_name" != "$SERVICE_NAME" ]; then
+        if [ -n "$service_name" ] && [ "$service_name" != "$USER_MIRROR_SERVICE_NAME" ]; then
             continue;
         fi
 
-        if ! [ -e "$chown_path" ]; then
+        if [ ! -e "$chown_path" ]; then
             printf "cannot access '%s': No such file or directory\n" "$chown_path" >&4;
             continue;
         fi
 
-        chown -c "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$chown_path" >&3;
+        chown -c "${host_user_id}:${host_user_gid}" "$chown_path" >&3;
     done <<EOF
-$CHOWN_LIST
+$USER_MIRROR_CHOWN_LIST
 EOF
+
+    if [ -n "$USER_MIRROR_CAPABILITIES" ]; then
+        capabilities="-all,$USER_MIRROR_CAPABILITIES";
+    else
+        capabilities='-all';
+    fi
+
+    unset USER_MIRROR_CAPABILITIES;
+    unset USER_MIRROR_CHOWN_LIST;
+    unset USER_MIRROR_HOST_USER;
+    unset USER_MIRROR_SERVICE_NAME;
 
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then
-        if [ -n "$CAPABILITIES" ]; then
-            capabilities="-all,$CAPABILITIES";
-        else
-            capabilities='-all';
-        fi
-
-        echo "HOME=$HOME_DIR LOGNAME=$HOST_MAPPED_USER SHELL=/bin/sh USER=$HOST_MAPPED_USER exec setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID ..." >&3;
-        HOME="$HOME_DIR" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" exec setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=$HOST_MAPPED_UID --regid=$HOST_MAPPED_GID "$@";
+        echo "exec setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} ..." >&3;
+        exec setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} "$@";
     elif command -v gosu >/dev/null; then
-        echo "HOME=$HOME_DIR LOGNAME=$HOST_MAPPED_USER SHELL=/bin/sh USER=$HOST_MAPPED_USER exec gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" ..." >&3;
-        HOME="$HOME_DIR" LOGNAME="$HOST_MAPPED_USER" SHELL='/bin/sh' USER="$HOST_MAPPED_USER" exec gosu "$HOST_MAPPED_UID:$HOST_MAPPED_GID" "$@";
+        echo "exec gosu \"${host_user_id}:${host_user_gid}\" ..." >&3;
+        exec gosu "${host_user_id}:${host_user_gid}" "$@";
     else
         printf 'Unable to set user\n' >&2;
         exit 1;
