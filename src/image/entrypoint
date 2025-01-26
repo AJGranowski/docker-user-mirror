@@ -229,8 +229,8 @@ if [ "$o_setup" = true ]; then
 else
     set -eC;
 
-    if [ -z "$HOST_USER" ]; then
-        printf 'HOST_USER is unset\n' >&2;
+    if [ -z "$USER_MIRROR_HOST_USER" ]; then
+        printf 'USER_MIRROR_HOST_USER is unset\n' >&2;
         guard_failure=true;
     fi
 
@@ -238,14 +238,14 @@ else
         exit 1;
     fi
 
-    echo "CAPABILITIES=${CAPABILITIES}" >&3;
-    echo "HOST_USER=${HOST_USER}" >&3;
-    echo "SERVICE_NAME=${SERVICE_NAME}" >&3;
+    echo "USER_MIRROR_CAPABILITIES=${USER_MIRROR_CAPABILITIES}" >&3;
+    echo "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}" >&3;
+    echo "USER_MIRROR_SERVICE_NAME=${USER_MIRROR_SERVICE_NAME}" >&3;
 
-    host_user_name="$(extract_index "$HOST_USER" 0 ':')";
-    host_user_id="$(extract_index "$HOST_USER" 1 ':')";
-    host_user_group="$(extract_index "$HOST_USER" 2 ':')";
-    host_user_gid="$(extract_index "$HOST_USER" 3 ':')";
+    host_user_name="$(extract_index "$USER_MIRROR_HOST_USER" 0 ':')";
+    host_user_id="$(extract_index "$USER_MIRROR_HOST_USER" 1 ':')";
+    host_user_group="$(extract_index "$USER_MIRROR_HOST_USER" 2 ':')";
+    host_user_gid="$(extract_index "$USER_MIRROR_HOST_USER" 3 ':')";
 
     # Create/replace user if non-root.
     if [ "$host_user_id" -ne 0 ] && [ "$host_user_name" != 'root' ]; then
@@ -297,7 +297,7 @@ else
             *) read chown_path;;
         esac
 
-        if [ -n "$service_name" ] && [ "$service_name" != "$SERVICE_NAME" ]; then
+        if [ -n "$service_name" ] && [ "$service_name" != "$USER_MIRROR_SERVICE_NAME" ]; then
             continue;
         fi
 
@@ -308,19 +308,19 @@ else
 
         chown -c "${host_user_id}:${host_user_gid}" "$chown_path" >&3;
     done <<EOF
-$CHOWN_LIST
+$USER_MIRROR_CHOWN_LIST
 EOF
 
-    if [ -n "$CAPABILITIES" ]; then
-        capabilities="-all,$CAPABILITIES";
+    if [ -n "$USER_MIRROR_CAPABILITIES" ]; then
+        capabilities="-all,$USER_MIRROR_CAPABILITIES";
     else
         capabilities='-all';
     fi
 
-    unset CAPABILITIES;
-    unset CHOWN_LIST;
-    unset HOST_USER;
-    unset SERVICE_NAME;
+    unset USER_MIRROR_CAPABILITIES;
+    unset USER_MIRROR_CHOWN_LIST;
+    unset USER_MIRROR_HOST_USER;
+    unset USER_MIRROR_SERVICE_NAME;
 
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then

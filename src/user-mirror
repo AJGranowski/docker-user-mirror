@@ -63,11 +63,11 @@ get_release_version() {
 # Create host items and populate chown list
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
-    # Grab the SERVICE_NAME environment variable if it exists.
-    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 13) (eq (slice . 0 13) "SERVICE_NAME=")}}{{slice . 13}}{{end}}{{end}}' "$1")";
+    # Grab the USER_MIRROR_SERVICE_NAME environment variable if it exists.
+    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 13) (eq (slice . 0 13) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 13}}{{end}}{{end}}' "$1")";
 
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
-    CHOWN_LIST="$CHOWN_LIST
+    USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
 $($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"$service_name\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
@@ -298,7 +298,7 @@ done
 
 # If Docker and not rootless, then we have some work to do.
 if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)";
+    USER_MIRROR_HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)";
 
     # Loop through the containers created by this command.
     while read temp_container_id; do
@@ -310,7 +310,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
 $(container_create "$@")
 EOF
 else
-    HOST_USER='root:0:root:0';
+    USER_MIRROR_HOST_USER='root:0:root:0';
 fi
 
 # Restore the args list we may have mangled before, and insert runtime arguments.
@@ -331,9 +331,9 @@ for arg do
                     set -- "$@" "$arg";
                 fi
 
-                set -- "$@" '-e' "HOST_USER=${HOST_USER}";
-                if [ -n "$CHOWN_LIST" ]; then
-                    set -- "$@" '-e' "CHOWN_LIST=${CHOWN_LIST}";
+                set -- "$@" '-e' "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}";
+                if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
+                    set -- "$@" '-e' "USER_MIRROR_CHOWN_LIST=${USER_MIRROR_CHOWN_LIST}";
                 fi
 
                 search_for_insert=0;
@@ -353,9 +353,9 @@ for arg do
     fi
 done
 
-export HOST_USER;
-if [ -n "$CHOWN_LIST" ]; then
-    export CHOWN_LIST;
+export USER_MIRROR_HOST_USER;
+if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
+    export USER_MIRROR_CHOWN_LIST;
 fi
 
 exec "$@";
