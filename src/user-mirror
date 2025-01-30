@@ -353,12 +353,7 @@ for arg do
     if [ "$search_for_insert" -gt 0 ]; then
         case "$arg" in
             create|exec|run)
-                if [ -n "$REPLACED_COMMAND" ]; then
-                    set -- "$@" "$REPLACED_COMMAND";
-                else
-                    set -- "$@" "$arg";
-                fi
-
+                set -- "$@" "$arg";
                 set -- "$@" '-e' "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}";
                 if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
                     set -- "$@" '-e' "USER_MIRROR_CHOWN_LIST=${USER_MIRROR_CHOWN_LIST}";
