@@ -151,7 +151,7 @@ while [ $# -gt 0 ]; do
             exec 4>&2;
             ;;
         --version)
-            echo "Version: ${VERSION}";
+            printf 'Version: %s\n' "$VERSION";
             exit 0;
             ;;
         -y|--yes)

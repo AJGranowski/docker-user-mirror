@@ -254,7 +254,7 @@ while [ $# -gt 0 ]; do
             o_update=true;
             ;;
         --version)
-            printf 'Cersion: %s\n' "$VERSION";
+            printf 'Version: %s\n' "$VERSION";
             exit 0;
             ;;
         -y|--yes)
