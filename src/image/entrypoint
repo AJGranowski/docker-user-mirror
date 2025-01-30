@@ -38,9 +38,9 @@ extract_index() (
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
 download_file() {
     if [ $# -eq 3 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/${3}/${1}";
     elif [ $# -eq 2 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/${1}";
     else
         echo 'Expected at least two arguments.' >&2;
         return 1;
@@ -66,7 +66,7 @@ get_release_version() {
     if [ $# -eq 0 ]; then
         response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
     else
-        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")";
     fi
 
     case "$(echo "$response" | tail -1)" in
@@ -78,12 +78,12 @@ get_release_version() {
 }
 
 print_user() {
-    grep -e "^$1:" /etc/passwd;
+    grep -e "^${1}:" /etc/passwd;
 }
 
 # Query GitHub to check if a release tag exists.
 release_tag_exists() {
-    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/$1")" in
+    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/${1}")" in
         2*) true;;
         *) false;;
     esac
@@ -107,8 +107,8 @@ update() {
         fi
     fi
 
-    echo "    Current version: $VERSION";
-    echo "    Latest version:  $latest_version";
+    printf '    Current version: %s\n' "$VERSION";
+    printf '    Latest version:  %s\n' "$latest_version";
 
     if [ "$VERSION" = "$latest_version" ]; then
         return 0;
@@ -117,7 +117,7 @@ update() {
     if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)';
         read yn;
-        case $yn in
+        case "$yn" in
             y*) ;;
             n*) return 0;;
         esac
@@ -125,7 +125,7 @@ update() {
 
     echo 'Installing update...';
     download_file 'entrypoint' "${0}.tmp";
-    mv "${0}.tmp" "$0" && chmod +x "$0" && echo "${latest_version} installed!"; exit 0;
+    mv "${0}.tmp" "$0" && chmod +x "$0" && printf '%s installed!\n' "$latest_version"; exit 0;
 }
 
 # Convert "$VERSION" to "release-**" format.
