@@ -24,7 +24,7 @@ extract_index() (
     str="$1";
     count="${2:-0}";
     delimiter="${3:- }";
-    while [ $count -gt 0 ]; do
+    while [ "$count" -gt 0 ]; do
         : $((count -= 1));
         case "$str" in
             *${delimiter}*) str="${str#*${delimiter}}";;
@@ -38,9 +38,9 @@ extract_index() (
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
 download_file() {
     if [ $# -eq 3 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/${3}/${1}";
     elif [ $# -eq 2 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/${1}";
     else
         echo 'Expected at least two arguments.' >&2;
         return 1;
@@ -66,7 +66,7 @@ get_release_version() {
     if [ $# -eq 0 ]; then
         response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
     else
-        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")";
     fi
 
     case "$(echo "$response" | tail -1)" in
@@ -78,12 +78,12 @@ get_release_version() {
 }
 
 print_user() {
-    grep -e "^$1:" /etc/passwd;
+    grep -e "^${1}:" /etc/passwd;
 }
 
 # Query GitHub to check if a release tag exists.
 release_tag_exists() {
-    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/$1")" in
+    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/${1}")" in
         2*) true;;
         *) false;;
     esac
@@ -107,8 +107,8 @@ update() {
         fi
     fi
 
-    echo "    Current version: $VERSION";
-    echo "    Latest version:  $latest_version";
+    printf '    Current version: %s\n' "$VERSION";
+    printf '    Latest version:  %s\n' "$latest_version";
 
     if [ "$VERSION" = "$latest_version" ]; then
         return 0;
@@ -117,7 +117,7 @@ update() {
     if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)';
         read yn;
-        case $yn in
+        case "$yn" in
             y*) ;;
             n*) return 0;;
         esac
@@ -125,7 +125,7 @@ update() {
 
     echo 'Installing update...';
     download_file 'entrypoint' "${0}.tmp";
-    mv "${0}.tmp" "$0" && chmod +x "$0" && echo "${latest_version} installed!"; exit 0;
+    mv "${0}.tmp" "$0" && chmod +x "$0" && printf '%s installed!\n' "$latest_version"; exit 0;
 }
 
 # Convert "$VERSION" to "release-**" format.
@@ -139,7 +139,7 @@ version_to_release_tag() {
 
 # Parse options.
 while [ $# -gt 0 ]; do
-    case $1 in
+    case "$1" in
         --setup)
             o_setup=true;
             ;;
@@ -151,7 +151,7 @@ while [ $# -gt 0 ]; do
             exec 4>&2;
             ;;
         --version)
-            echo "Version: ${VERSION}";
+            printf 'Version: %s\n' "$VERSION";
             exit 0;
             ;;
         -y|--yes)
@@ -161,9 +161,7 @@ while [ $# -gt 0 ]; do
             shift;
             break;
             ;;
-        *)
-            break;
-            ;;
+        *) break;;
     esac
     shift;
 done
@@ -184,14 +182,14 @@ if [ "$o_setup" = true ]; then
 
         # Attempt to install setpriv with apk.
         if (apk update && apk -s add setpriv) >/dev/null 2>&1; then
-            apk add --no-cache "setpriv>=$SETPRIV_VERSION";
+            apk add --no-cache "setpriv>=${SETPRIV_VERSION}";
             hash -r;
             check_setpriv;
             echo 'setpriv installed!';
 
         # Attempt to install setpriv from util-linux with apt-get.
         elif (apt-get update && apt-get install --dry-run util-linux) >/dev/null 2>&1; then
-            apt-get satisfy --no-install-recommends -y "util-linux (>=$UTIL_LINUX_VERSION)";
+            apt-get satisfy --no-install-recommends -y "util-linux (>=${UTIL_LINUX_VERSION})";
             hash -r;
             check_setpriv;
             echo 'setpriv installed!';
@@ -208,12 +206,12 @@ if [ "$o_setup" = true ]; then
                 ppc64le) dpkgArch='ppc64el' ;;
                 riscv64 | s390x) dpkgArch="$unameArch" ;;
                 x86_64) dpkgArch='amd64' ;;
-                *) echo >&2 "error: unknown/unsupported architecture '$unameArch'"; exit 1 ;;
+                *) printf 'error: unknown/unsupported architecture: %s\n' "$unameArch" >&2; exit 1;;
             esac
 
             mkdir -p /usr/local/bin/;
-            wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch";
-            wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc";
+            wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}";
+            wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc";
 
             GNUPGHOME="$(mktemp -d)";
             if command -v gpg >/dev/null; then
@@ -230,7 +228,7 @@ else
     set -eC;
 
     if [ -z "$USER_MIRROR_HOST_USER" ]; then
-        printf 'USER_MIRROR_HOST_USER is unset\n' >&2;
+        echo 'USER_MIRROR_HOST_USER is unset' >&2;
         guard_failure=true;
     fi
 
@@ -238,9 +236,9 @@ else
         exit 1;
     fi
 
-    echo "USER_MIRROR_CAPABILITIES=${USER_MIRROR_CAPABILITIES}" >&3;
-    echo "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}" >&3;
-    echo "USER_MIRROR_SERVICE_NAME=${USER_MIRROR_SERVICE_NAME}" >&3;
+    printf 'USER_MIRROR_CAPABILITIES=%s\n' "$USER_MIRROR_CAPABILITIES" >&3;
+    printf 'USER_MIRROR_HOST_USER=%s\n' "$USER_MIRROR_HOST_USER" >&3;
+    printf 'USER_MIRROR_SERVICE_NAME=%s\n' "$USER_MIRROR_SERVICE_NAME" >&3;
 
     host_user_name="$(extract_index "$USER_MIRROR_HOST_USER" 0 ':')";
     host_user_id="$(extract_index "$USER_MIRROR_HOST_USER" 1 ':')";
@@ -253,7 +251,7 @@ else
 
         uid_username="$(awk -F: "\$3 == ${host_user_id} {print \$1}" /etc/passwd)";
         if id -u "$uid_username" >/dev/null 2>&1; then
-            echo "Removing user matching UID ${host_user_id}: $(print_user $uid_username)" >&3;
+            printf 'Removing user matching UID %s: %s\n' "$host_user_id" "$(print_user "$uid_username")" >&3;
             if command -v userdel >/dev/null; then
                 userdel "$uid_username";
             else
@@ -273,7 +271,7 @@ else
         else
             adduser -D -g 'Mirrored Host User' -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         fi
-        echo "Created user: $(print_user "$host_user_name")" >&3;
+        printf 'Created user: %s\n' "$(print_user "$host_user_name")" >&3;
 
         export HOME="/home/${host_user_name}";
     else
@@ -289,7 +287,7 @@ else
             continue;
         fi
 
-        case $service_name in
+        case "$service_name" in
             /*)
                 chown_path="$service_name";
                 unset service_name;
@@ -324,7 +322,7 @@ EOF
 
     # Execute using $HOST_MAPPED_UID.
     if check_setpriv >/dev/null 2>&1; then
-        echo "exec setpriv --bounding-set \"$capabilities\" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} ..." >&3;
+        echo "exec setpriv --bounding-set \"${capabilities}\" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} ..." >&3;
         exec setpriv --bounding-set "$capabilities" --init-groups --no-new-privs --reuid=${host_user_id} --regid=${host_user_gid} "$@";
     elif command -v gosu >/dev/null; then
         echo "exec gosu \"${host_user_id}:${host_user_gid}\" ..." >&3;

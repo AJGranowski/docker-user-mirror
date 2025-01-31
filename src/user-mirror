@@ -6,14 +6,79 @@ VERSION='development';
 
 # Create container(s) and return the container ID(s).
 container_create() {
-    if [ -n "$REPLACED_COMMAND" ]; then
+    if [ "$COMMAND_TYPE" = 'compose' ]; then
+        # For compose commands, we just need to create the containers used in the command.
+        # TODO: Be selective when creating containers. https://github.com/AJGranowski/docker-user-mirror/issues/83
+        for arg do
+            if [ "$is_file" = true ]; then
+                unset is_file;
+                if [ -z "$compose_configuration_files" ]; then
+                    compose_configuration_files="-f ${arg}";
+                else
+                    compose_configuration_files="${compose_configuration_files} -f ${arg}";
+                fi
+            else
+                case "$arg" in
+                    -f|--file) is_file=true;;
+                esac
+            fi
+        done
+
+        $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null 2>&1;
+        $COMPOSE_ENGINE --progress quiet ps --status created --format '{{.ID}}';
+    elif [ "$COMMAND_TYPE" = 'container' ]; then
+        # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
+        #   to create (but not start) a container for parsing. We're modifying the argument list since that's the only
+        #   array supported in POSIX shell.
+        first_iteration=true;
+        index=0;
+        search_for_replace=true;
+        for arg do
+            if [ "$first_iteration" = true ]; then
+                unset first_iteration;
+                shift $#;
+            fi
+
+            if [ "$search_for_replace" = true ]; then
+                case "$arg" in
+                    exec|run)
+                        replaced_command="$arg";
+                        replaced_command_index="$index";
+                        set -- "$@" "create";
+                        unset search_for_replace;
+                        ;;
+                    *) set -- "$@" "$arg";;
+                esac
+            else
+                set -- "$@" "$arg";
+            fi
+
+            : $((index += 1));
+        done
+
         "$@";
-    elif [ -n "$COMPOSE_FILES" ]; then
-        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" create >/dev/null 2>&1;
-        $COMPOSE_ENGINE --progress quiet --file "$COMPOSE_FILES" ps -a --status created --format '{{.ID}}';
+
+        if [ -n "$replaced_command" ] && [ -n "$replaced_command_index" ]; then
+            first_iteration=true;
+            index=0;
+            for arg do
+                if [ "$first_iteration" = true ]; then
+                    unset first_iteration;
+                    shift $#;
+                fi
+
+                if [ "$index" -eq "$replaced_command_index" ]; then
+                    set -- "$@" "$replaced_command";
+                else
+                    set -- "$@" "$arg";
+                fi
+
+                : $((index += 1));
+            done
+        fi
     else
-        $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1;
-        $COMPOSE_ENGINE --progress quiet ps -a --status created --format '{{.ID}}';
+        printf 'Unknown COMMAND_TYPE state: %s\n' "$COMMAND_TYPE" >&2;
+        exit 1;
     fi
 }
 
@@ -21,9 +86,9 @@ container_create() {
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
 download_file() {
     if [ $# -eq 3 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/$3/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/${3}/${1}";
     elif [ $# -eq 2 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/$1";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/${1}";
     else
         echo 'Expected at least two arguments.' >&2;
         return 1;
@@ -49,7 +114,7 @@ get_release_version() {
     if [ $# -eq 0 ]; then
         response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
     else
-        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/$1/version")";
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")";
     fi
 
     case "$(echo "$response" | tail -1)" in
@@ -64,11 +129,11 @@ get_release_version() {
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
     # Grab the USER_MIRROR_SERVICE_NAME environment variable if it exists.
-    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 13) (eq (slice . 0 13) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 13}}{{end}}{{end}}' "$1")";
+    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")";
 
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
     USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
-$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"$service_name\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
+$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
     while read create_path; do
@@ -121,7 +186,7 @@ EOF
 
 # Query GitHub to check if a release tag exists.
 release_tag_exists() {
-    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/$1")" in
+    case "$(curl -Ls -o /dev/null -w '%{http_code}' "https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/tags/${1}")" in
         2*) true;;
         *) false;;
     esac
@@ -145,8 +210,8 @@ update() {
         fi
     fi
 
-    echo "    Current version: $VERSION";
-    echo "    Latest version:  $latest_version";
+    printf '    Current version: %s\n' "$VERSION";
+    printf '    Latest version:  %s\n' "$latest_version";
 
     if [ "$VERSION" = "$latest_version" ]; then
         return 0;
@@ -155,7 +220,7 @@ update() {
     if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)';
         read yn;
-        case $yn in
+        case "$yn" in
             y*) ;;
             n*) return 0;;
         esac
@@ -163,7 +228,7 @@ update() {
 
     echo 'Installing update...';
     download_file 'user-mirror' "${0}.tmp";
-    mv "${0}.tmp" "$0" && chmod +x "$0" && echo "${latest_version} installed!"; exit 0;
+    mv "${0}.tmp" "$0" && chmod +x "$0" && printf '%s installed!\n' "$latest_version"; exit 0;
 }
 
 # Convert "$VERSION" to "release-**" format.
@@ -177,7 +242,7 @@ version_to_release_tag() {
 
 # Parse options.
 while [ $# -gt 0 ]; do
-    case $1 in
+    case "$1" in
         --docker)
             COMPOSE_ENGINE='docker compose';
             CONTAINER_ENGINE='docker';
@@ -198,7 +263,7 @@ while [ $# -gt 0 ]; do
             o_update=true;
             ;;
         --version)
-            echo "Version: ${VERSION}";
+            printf 'Version: %s\n' "$VERSION";
             exit 0;
             ;;
         -y|--yes)
@@ -209,12 +274,10 @@ while [ $# -gt 0 ]; do
             break;
             ;;
         -*)
-            printf 'Unknown option %s\n' $1 >&2;
+            printf 'Unknown option %s\n' "$1" >&2;
             exit 1;
             ;;
-        *)
-            break;
-            ;;
+        *) break;;
     esac
     shift;
 done
@@ -229,7 +292,7 @@ fi
 
 # Parse the command if no engine declared.
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
-    case $1 in
+    case "$1" in
         docker-compose)
             COMPOSE_ENGINE='docker-compose';
             CONTAINER_ENGINE='docker';
@@ -249,52 +312,24 @@ if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     esac
 fi
 
-# To get the arguments from a non-compose invocation, we'll change "exec" and "run" to "create", and then use that new
-#   command string to create (but not start) a container for parsing. This is a workaround for POSIX shell only having
-#   one array object (the argument list).
-COMPOSE_FILES="";
-add_compose_file=false;
-first_iteration=true;
-search_for_replace=4;
+# Duck type the command
 for arg do
-    if [ "$first_iteration" = true ]; then
-        unset first_iteration;
-        shift $#;
-    fi
-
-    if [ $search_for_replace -gt 0 ]; then
-        case $arg in
-            compose)
-                set -- "$@" "$arg";
-                search_for_replace=0;
-                ;;
-            run)
-                REPLACED_COMMAND="$arg";
-                set -- "$@" "create";
-                search_for_replace=0;
-                ;;
-            *)
-                set -- "$@" "$arg";
-                ;;
-        esac
-
-        # Decrement for non-option arguments.
-        case $arg in
-            -*) ;;
-            *) : $((search_for_replace -= 1));;
-        esac
-    else
-        if [ "$add_compose_file" =  true ]; then
-            unset add_compose_file;
-            COMPOSE_FILES="$arg";
-        else
-            case $arg in
-                -f|--file) add_compose_file=true;;
-            esac
-        fi
-        set -- "$@" "$arg";
-    fi
+    case "$arg" in
+        compose|up)
+            COMMAND_TYPE='compose';
+            break;
+            ;;
+        container|create|exec|run)
+            COMMAND_TYPE='container';
+            break;
+            ;;
+    esac
 done
+
+if [ -z "$COMMAND_TYPE" ]; then
+    exec "$@";
+    exit 0;
+fi
 
 # If Docker and not rootless, then we have some work to do.
 if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
@@ -322,15 +357,10 @@ for arg do
         shift $#;
     fi
 
-    if [ $search_for_insert -gt 0 ]; then
-        case $arg in
+    if [ "$search_for_insert" -gt 0 ]; then
+        case "$arg" in
             create|exec|run)
-                if [ -n "$REPLACED_COMMAND" ]; then
-                    set -- "$@" "$REPLACED_COMMAND";
-                else
-                    set -- "$@" "$arg";
-                fi
-
+                set -- "$@" "$arg";
                 set -- "$@" '-e' "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}";
                 if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
                     set -- "$@" '-e' "USER_MIRROR_CHOWN_LIST=${USER_MIRROR_CHOWN_LIST}";
@@ -338,13 +368,11 @@ for arg do
 
                 search_for_insert=0;
                 ;;
-            *)
-                set -- "$@" "$arg";
-                ;;
+            *) set -- "$@" "$arg";;
         esac
 
         # Decrement for non-option arguments.
-        case $arg in
+        case "$arg" in
             -*) ;;
             *) : $((search_for_insert -= 1));;
         esac
