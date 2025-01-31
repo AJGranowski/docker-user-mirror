@@ -7,9 +7,24 @@ VERSION='development';
 # Create container(s) and return the container ID(s).
 container_create() {
     if [ "$COMMAND_TYPE" = 'compose' ]; then
-        # For compose commands, we just need to create containers used in the command.
-        # TODO: Be selective when creating containers. # https://github.com/AJGranowski/docker-user-mirror/issues/83
-        $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1;
+        # For compose commands, we just need to create the containers used in the command.
+        # TODO: Be selective when creating containers. https://github.com/AJGranowski/docker-user-mirror/issues/83
+        for arg do
+            if [ "$is_file" = true ]; then
+                unset is_file;
+                if [ -z "$compose_configuration_files" ]; then
+                    compose_configuration_files="-f ${arg}";
+                else
+                    compose_configuration_files="${compose_configuration_files} -f ${arg}";
+                fi
+            else
+                case "$arg" in
+                    -f|--file) is_file=true;;
+                esac
+            fi
+        done
+
+        $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null 2>&1;
         $COMPOSE_ENGINE --progress quiet ps --status created --format '{{.ID}}';
     elif [ "$COMMAND_TYPE" = 'container' ]; then
         # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
