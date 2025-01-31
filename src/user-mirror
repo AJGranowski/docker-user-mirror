@@ -7,18 +7,14 @@ VERSION='development';
 # Create container(s) and return the container ID(s).
 container_create() {
     if [ "$COMMAND_TYPE" = 'compose' ]; then
-        # For compose commands, we just to create containers used in the command. No need to worry about forwarding arguments.
-        # For example:
-        # docker compose up => docker compose create
-        # docker compose up service1 service2 => docker compose create service1 service2
-        # docker compose run service1 => docker compose create service1
+        # For compose commands, we just need to create containers used in the command.
+        # TODO: Be selective when creating containers. # https://github.com/AJGranowski/docker-user-mirror/issues/83
         $COMPOSE_ENGINE --progress quiet create >/dev/null 2>&1;
-        $COMPOSE_ENGINE --progress quiet ps -a --status created --format '{{.ID}}';
+        $COMPOSE_ENGINE --progress quiet ps --status created --format '{{.ID}}';
     elif [ "$COMMAND_TYPE" = 'container' ]; then
-        # For container commands, we just replace exec and run with create and then run the command.
-        # To get the arguments from a non-compose invocation, we'll change "exec" and "run" to "create", and then use that new
-        #   command string to create (but not start) a container for parsing. This is a workaround for POSIX shell only having
-        #   one array object (the argument list).
+        # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
+        #   to create (but not start) a container for parsing. We're modifying the argument list since that's the only
+        #   array supported in POSIX shell.
         first_iteration=true;
         index=0;
         search_for_replace=true;
