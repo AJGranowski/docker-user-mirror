@@ -308,7 +308,7 @@ for arg do
             COMMAND_TYPE='compose';
             break;
             ;;
-        create|exec|run)
+        container|create|exec|run)
             COMMAND_TYPE='container';
             break;
             ;;
