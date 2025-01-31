@@ -206,7 +206,7 @@ if [ "$o_setup" = true ]; then
                 ppc64le) dpkgArch='ppc64el' ;;
                 riscv64 | s390x) dpkgArch="$unameArch" ;;
                 x86_64) dpkgArch='amd64' ;;
-                *) echo >&2 "error: unknown/unsupported architecture '$unameArch'"; exit 1 ;;
+                *) printf 'error: unknown/unsupported architecture: %s\n' "$unameArch" >&2; exit 1;;
             esac
 
             mkdir -p /usr/local/bin/;
@@ -228,7 +228,7 @@ else
     set -eC;
 
     if [ -z "$USER_MIRROR_HOST_USER" ]; then
-        printf 'USER_MIRROR_HOST_USER is unset\n' >&2;
+        echo 'USER_MIRROR_HOST_USER is unset' >&2;
         guard_failure=true;
     fi
 
@@ -236,9 +236,9 @@ else
         exit 1;
     fi
 
-    echo "USER_MIRROR_CAPABILITIES=${USER_MIRROR_CAPABILITIES}" >&3;
-    echo "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}" >&3;
-    echo "USER_MIRROR_SERVICE_NAME=${USER_MIRROR_SERVICE_NAME}" >&3;
+    printf 'USER_MIRROR_CAPABILITIES=%s\n' "$USER_MIRROR_CAPABILITIES" >&3;
+    printf 'USER_MIRROR_HOST_USER=%s\n' "$USER_MIRROR_HOST_USER" >&3;
+    printf 'USER_MIRROR_SERVICE_NAME=%s\n' "$USER_MIRROR_SERVICE_NAME" >&3;
 
     host_user_name="$(extract_index "$USER_MIRROR_HOST_USER" 0 ':')";
     host_user_id="$(extract_index "$USER_MIRROR_HOST_USER" 1 ':')";
@@ -251,7 +251,7 @@ else
 
         uid_username="$(awk -F: "\$3 == ${host_user_id} {print \$1}" /etc/passwd)";
         if id -u "$uid_username" >/dev/null 2>&1; then
-            echo "Removing user matching UID ${host_user_id}: $(print_user "$uid_username")" >&3;
+            printf 'Removing user matching UID %s: %s\n' "$host_user_id" "$(print_user "$uid_username")" >&3;
             if command -v userdel >/dev/null; then
                 userdel "$uid_username";
             else
@@ -271,7 +271,7 @@ else
         else
             adduser -D -g 'Mirrored Host User' -G "$gid_groupname" -s "$SHELL" -u "$host_user_id" "$host_user_name" 2>&4;
         fi
-        echo "Created user: $(print_user "$host_user_name")" >&3;
+        printf 'Created user: %s\n' "$(print_user "$host_user_name")" >&3;
 
         export HOME="/home/${host_user_name}";
     else
