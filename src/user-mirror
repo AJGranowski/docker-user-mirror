@@ -47,9 +47,7 @@ container_create() {
                         set -- "$@" "create";
                         unset search_for_replace;
                         ;;
-                    *)
-                        set -- "$@" "$arg";
-                        ;;
+                    *) set -- "$@" "$arg";;
                 esac
             else
                 set -- "$@" "$arg";
@@ -279,9 +277,7 @@ while [ $# -gt 0 ]; do
             printf 'Unknown option %s\n' "$1" >&2;
             exit 1;
             ;;
-        *)
-            break;
-            ;;
+        *) break;;
     esac
     shift;
 done
@@ -372,9 +368,7 @@ for arg do
 
                 search_for_insert=0;
                 ;;
-            *)
-                set -- "$@" "$arg";
-                ;;
+            *) set -- "$@" "$arg";;
         esac
 
         # Decrement for non-option arguments.
