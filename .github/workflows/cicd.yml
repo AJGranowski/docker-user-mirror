@@ -45,7 +45,7 @@ jobs:
 
       - name: CI Files Changed
         id: ci-files-changed
-        if: ${{ github.event_name != 'workflow_dispatch' || github.ref_type != 'tag' }}
+        if: ${{ github.event_name != 'workflow_dispatch' && github.ref_type != 'tag' }}
         uses: tj-actions/changed-files@d6e91a2266cdb9d62096cebf1e8546899c6aa18f # v45.0.6
         with:
           files_yaml: |
