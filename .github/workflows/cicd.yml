@@ -20,8 +20,8 @@ jobs:
     name: Detect Changed Files
     runs-on: ubuntu-latest
     outputs:
-      run-ci: ${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}
-      run-tag-for-release: ${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}
+      run-ci: ${{ github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' || steps.ci-files-changed.outputs.paths_any_modified == 'true' }}
+      run-tag-for-release: ${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.paths_any_modified == 'true' }}
 
     steps:
       - name: Harden Runner
@@ -45,7 +45,7 @@ jobs:
 
       - name: CI Files Changed
         id: ci-files-changed
-        if: ${{ github.ref_type != 'tag' }}
+        if: ${{ github.event_name != 'workflow_dispatch' && github.ref_type != 'tag' }}
         uses: tj-actions/changed-files@d6e91a2266cdb9d62096cebf1e8546899c6aa18f # v45.0.6
         with:
           files_yaml: |
@@ -63,7 +63,7 @@ jobs:
 
       - name: Release Files Changed
         id: release-files-changed
-        if: ${{ github.ref_type != 'tag' && env.SKIP_AUTO_RELEASE != 'true' }}
+        if: ${{ github.event_name != 'workflow_dispatch' && github.ref_type != 'tag' && env.SKIP_AUTO_RELEASE != 'true' }}
         uses: tj-actions/changed-files@d6e91a2266cdb9d62096cebf1e8546899c6aa18f # v45.0.6
         with:
           files_yaml: |

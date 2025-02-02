@@ -11,10 +11,6 @@ container_create() {
         search_limit=3;
         skip_counter=0;
         for arg do
-            if [ "$search_limit" -le 0 ]; then
-                break;
-            fi
-
             if [ "$is_file" = true ]; then
                 unset is_file;
                 if [ -z "$compose_configuration_files" ]; then
@@ -22,22 +18,32 @@ container_create() {
                 else
                     compose_configuration_files="${compose_configuration_files} -f ${arg}";
                 fi
+            elif [ "$is_run_command" = true ]; then
+                case "$arg" in
+                    -v|--volume)
+                        echo 'Error: This script does not support compose CLI volume arguments.' >&2;
+                        echo '    Rootless Docker will better serve your use case.' >&2;
+                        echo '    https://docs.docker.com/engine/security/rootless/' >&2;
+                        exit 1;
+                        ;;
+                esac
             else
+                if [ "$search_limit" -le 0 ]; then
+                    break;
+                fi
+
                 case "$arg" in
                     -f|--file) is_file=true;;
-                    run)
-                        is_run_command=true;
-                        break;
-                        ;;
+                    run) is_run_command=true;;
                 esac
 
                 case "$arg" in
                     -*) : $((search_limit += 2));;
                 esac
-            fi
 
-            : $((search_limit -= 1));
-            : $((skip_counter += 1));
+                : $((search_limit -= 1));
+                : $((skip_counter += 1));
+            fi
         done
 
         create_all_containers=true;
@@ -51,6 +57,7 @@ container_create() {
                 break;
             fi
 
+            items="$(docker compose config --services)";
             while read service; do
                 if [ "$arg" = "$service" ]; then
                     unset create_all_containers;
@@ -64,7 +71,7 @@ container_create() {
                     break;
                 fi
             done <<EOF
-$(docker compose config --services)
+$items
 EOF
         done
 
@@ -201,6 +208,7 @@ prepare_environment() {
 $($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")";
     while read create_path; do
         if [ -z "$create_path" ]; then
             break;
@@ -208,10 +216,11 @@ $($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${s
 
         mkdir -p "$create_path" >/dev/null 2>&1 || true;
     done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")
+$items
 EOF
     # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
     #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")";
     while read edge_source; do
         if [ -z "$edge_source" ]; then
             break;
@@ -219,6 +228,7 @@ EOF
 
         read edge_destination;
 
+        items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")";
         while read node_source; do
             if [ -z "$node_source" ]; then
                 break;
@@ -241,11 +251,11 @@ EOF
                 mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
             fi
         done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")
+$items
 EOF
 
     done <<EOF
-$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")
+$items
 EOF
 }
 
@@ -409,6 +419,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
     USER_MIRROR_HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)";
 
     # Loop through the containers created by this command.
+    items="$(container_create "$@")";
     while read temp_container_id; do
         if [ -z "$temp_container_id" ]; then
             continue;
@@ -421,7 +432,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
             $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null;
         fi
     done <<EOF
-$(container_create "$@")
+$items
 EOF
 else
     USER_MIRROR_HOST_USER='root:0:root:0';
