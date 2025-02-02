@@ -76,7 +76,6 @@ EOF
         # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
         #   to create (but not start) a container for parsing. We're modifying the argument list since that's the only
         #   array supported in POSIX shell.
-        abort=true;
         first_iteration=true;
         index=0;
         search_for_replace=true;
@@ -97,12 +96,11 @@ EOF
                         replaced_command="$arg";
                         replaced_command_index="$index";
                         set -- "$@" "create";
-                        unset abort;
                         unset search_for_replace;
                         ;;
                     create)
-                        unset abort;
                         set -- "$@" "$arg";
+                        unset search_for_replace;
                         ;;
                     *) set -- "$@" "$arg";;
                 esac
@@ -118,7 +116,7 @@ EOF
             fi
         done
 
-        if [ "$abort" = true ]; then
+        if [ "$search_for_replace" = true ]; then
             echo '[user-mirror]: Unable to create container.' >&2;
             exit 1;
         fi
