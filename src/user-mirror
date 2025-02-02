@@ -69,7 +69,7 @@ EOF
 
         if [ "$create_all_containers" = true ]; then
             $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null;
-            $COMPOSE_ENGINE ps --status created;
+            $COMPOSE_ENGINE ps --status created --format '{{.ID}}';
         fi
     elif [ "$COMMAND_TYPE" = 'container' ]; then
         # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
