@@ -11,10 +11,6 @@ container_create() {
         search_limit=3;
         skip_counter=0;
         for arg do
-            if [ "$search_limit" -le 0 ]; then
-                break;
-            fi
-
             if [ "$is_file" = true ]; then
                 unset is_file;
                 if [ -z "$compose_configuration_files" ]; then
@@ -22,22 +18,32 @@ container_create() {
                 else
                     compose_configuration_files="${compose_configuration_files} -f ${arg}";
                 fi
+            elif [ "$is_run_command" = true ]; then
+                case "$arg" in
+                    -v|--volume)
+                        echo 'Error: This script does not support compose CLI volume arguments.' >&2;
+                        echo '    Rootless Docker will better serve your use case.' >&2;
+                        echo '    https://docs.docker.com/engine/security/rootless/' >&2;
+                        exit 1;
+                        ;;
+                esac
             else
+                if [ "$search_limit" -le 0 ]; then
+                    break;
+                fi
+
                 case "$arg" in
                     -f|--file) is_file=true;;
-                    run)
-                        is_run_command=true;
-                        break;
-                        ;;
+                    run) is_run_command=true;;
                 esac
 
                 case "$arg" in
                     -*) : $((search_limit += 2));;
                 esac
-            fi
 
-            : $((search_limit -= 1));
-            : $((skip_counter += 1));
+                : $((search_limit -= 1));
+                : $((skip_counter += 1));
+            fi
         done
 
         create_all_containers=true;
