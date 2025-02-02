@@ -7,9 +7,14 @@ VERSION='development';
 # Create container(s) and return the container ID(s).
 container_create() {
     if [ "$COMMAND_TYPE" = 'compose' ]; then
-        # For compose commands, we just need to create the containers used in the command.
-        # TODO: Be selective when creating containers. https://github.com/AJGranowski/docker-user-mirror/issues/83
+        # For compose commands, we don't need to worry about preserving options when creating containers.
+        search_limit=3;
+        skip_counter=0;
         for arg do
+            if [ "$search_limit" -le 0 ]; then
+                break;
+            fi
+
             if [ "$is_file" = true ]; then
                 unset is_file;
                 if [ -z "$compose_configuration_files" ]; then
@@ -20,19 +25,54 @@ container_create() {
             else
                 case "$arg" in
                     -f|--file) is_file=true;;
+                    run)
+                        is_run_command=true;
+                        break;
+                        ;;
+                esac
+
+                case "$arg" in
+                    -*) : $((search_limit += 2));;
                 esac
             fi
+
+            : $((search_limit -= 1));
+            : $((skip_counter += 1));
         done
 
-        $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null 2>&1;
-        $COMPOSE_ENGINE --progress quiet ps --status created --format '{{.ID}}';
+        for arg do
+            if [ "$skip_counter" -gt 0 ]; then
+                : $((skip_counter -= 1));
+                continue;
+            fi
+
+            if [ "$should_break" = true ]; then
+                break;
+            fi
+
+            while read service; do
+                if [ "$arg" = "$service" ]; then
+                    $COMPOSE_ENGINE --progress quiet $compose_configuration_files create "$service" >/dev/null;
+                    $COMPOSE_ENGINE ps -a --format "{{if eq .Service \"$service\"}}{{.ID}}{{end}}";
+
+                    if [ "$is_run_command" = true ]; then
+                        should_break=true;
+                        break;
+                    fi
+                fi
+            done <<EOF
+$(docker compose config --services)
+EOF
+        done
     elif [ "$COMMAND_TYPE" = 'container' ]; then
         # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
         #   to create (but not start) a container for parsing. We're modifying the argument list since that's the only
         #   array supported in POSIX shell.
+        abort=true;
         first_iteration=true;
         index=0;
         search_for_replace=true;
+        search_limit=3;
         for arg do
             if [ "$first_iteration" = true ]; then
                 unset first_iteration;
@@ -40,21 +80,40 @@ container_create() {
             fi
 
             if [ "$search_for_replace" = true ]; then
+                if [ "$search_limit" -le 0 ]; then
+                    break;
+                fi
+
                 case "$arg" in
                     exec|run)
                         replaced_command="$arg";
                         replaced_command_index="$index";
                         set -- "$@" "create";
+                        unset abort;
                         unset search_for_replace;
+                        ;;
+                    create)
+                        unset abort;
+                        set -- "$@" "$arg";
                         ;;
                     *) set -- "$@" "$arg";;
                 esac
+
+                case "$arg" in
+                    -*) : $((search_limit += 2));;
+                esac
+
+                : $((index += 1));
+                : $((search_limit -= 1));
             else
                 set -- "$@" "$arg";
             fi
-
-            : $((index += 1));
         done
+
+        if [ "$abort" = true ]; then
+            echo '[user-mirror]: Unable to create container.' >&2;
+            exit 1;
+        fi
 
         "$@";
 
@@ -313,7 +372,12 @@ if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
 fi
 
 # Duck type the command
+search_limit=2;
 for arg do
+    if [ "$search_limit" -le 0 ]; then
+        break;
+    fi
+
     case "$arg" in
         compose|up)
             COMMAND_TYPE='compose';
@@ -323,12 +387,15 @@ for arg do
             COMMAND_TYPE='container';
             break;
             ;;
+        -*) : $((search_limit += 2));;
     esac
+
+    : $((search_limit -= 1));
 done
 
 if [ -z "$COMMAND_TYPE" ]; then
-    exec "$@";
-    exit 0;
+    echo '[user-mirror]: Unable to parse command. Aborting.' >&2;
+    exit 1;
 fi
 
 # If Docker and not rootless, then we have some work to do.
@@ -337,10 +404,16 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
 
     # Loop through the containers created by this command.
     while read temp_container_id; do
+        if [ -z "$temp_container_id" ]; then
+            continue;
+        fi
+
         prepare_environment "$temp_container_id"
 
         # Cleanup.
-        $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null 2>&1;
+        if [ "$(docker inspect --format '{{.State.Status}}' "$temp_container_id")" = 'created' ]; then
+            $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null;
+        fi
     done <<EOF
 $(container_create "$@")
 EOF
