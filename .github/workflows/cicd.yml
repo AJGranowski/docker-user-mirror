@@ -20,8 +20,8 @@ jobs:
     name: Detect Changed Files
     runs-on: ubuntu-latest
     outputs:
-      run-ci: ${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.paths_any_changed == 'true') }}
-      run-tag-for-release: ${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.paths_any_changed == 'true' }}
+      run-ci: ${{ github.ref_type == 'tag' || (github.ref_type != 'tag' && steps.ci-files-changed.outputs.any_modified == 'true') }}
+      run-tag-for-release: ${{ github.ref == 'refs/heads/main' && env.COMMIT_IS_TAGGED != 'true' && steps.release-files-changed.outputs.any_modified == 'true' }}
 
     steps:
       - name: Harden Runner
