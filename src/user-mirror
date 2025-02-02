@@ -47,7 +47,7 @@ container_create() {
                 continue;
             fi
 
-            if [ "$should_break" = true ]; then
+            if [ "$exit_loop" = true ]; then
                 break;
             fi
 
@@ -58,9 +58,10 @@ container_create() {
                     $COMPOSE_ENGINE ps -a --format "{{if eq .Service \"$service\"}}{{.ID}}{{end}}";
 
                     if [ "$is_run_command" = true ]; then
-                        should_break=true;
-                        break;
+                        exit_loop=true;
                     fi
+
+                    break;
                 fi
             done <<EOF
 $(docker compose config --services)
