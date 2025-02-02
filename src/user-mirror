@@ -57,7 +57,6 @@ container_create() {
                 break;
             fi
 
-            # shellcheck disable=SC2034
             items="$(docker compose config --services)";
             while read service; do
                 if [ "$arg" = "$service" ]; then
@@ -72,7 +71,7 @@ container_create() {
                     break;
                 fi
             done <<EOF
-$(items)
+$items
 EOF
         done
 
@@ -209,7 +208,6 @@ prepare_environment() {
 $($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
-    # shellcheck disable=SC2034
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")";
     while read create_path; do
         if [ -z "$create_path" ]; then
@@ -218,11 +216,10 @@ $($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${s
 
         mkdir -p "$create_path" >/dev/null 2>&1 || true;
     done <<EOF
-$(items)
+$items
 EOF
     # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
     #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
-    # shellcheck disable=SC2034
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")";
     while read edge_source; do
         if [ -z "$edge_source" ]; then
@@ -231,7 +228,6 @@ EOF
 
         read edge_destination;
 
-        # shellcheck disable=SC2034
         items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")";
         while read node_source; do
             if [ -z "$node_source" ]; then
@@ -255,11 +251,11 @@ EOF
                 mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
             fi
         done <<EOF
-$(items)
+$items
 EOF
 
     done <<EOF
-$(items)
+$items
 EOF
 }
 
@@ -423,7 +419,6 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
     USER_MIRROR_HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)";
 
     # Loop through the containers created by this command.
-    # shellcheck disable=SC2034
     items="$(container_create "$@")";
     while read temp_container_id; do
         if [ -z "$temp_container_id" ]; then
@@ -437,7 +432,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
             $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null;
         fi
     done <<EOF
-$(items)
+$items
 EOF
 else
     USER_MIRROR_HOST_USER='root:0:root:0';
