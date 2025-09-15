@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: block
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: ${{ matrix.container-context == 'docker-default' }}
           egress-policy: block
@@ -145,7 +145,7 @@ jobs:
     if: ${{ needs.changed-files.outputs.run-tag-for-release == 'true' }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: block
@@ -211,7 +211,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/release-') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: block
