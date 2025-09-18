@@ -105,6 +105,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      - name: Validate Compose File
+        run: docker compose --file src/compose.yml config --quiet
+
       - name: Use Rootless Docker
         if: ${{ matrix.container-context == 'docker-rootless' }}
         uses: ScribeMD/rootless-docker@6bd157a512c2fafa4e0243a8aa87d964eb890886 # 0.2.2
@@ -142,6 +145,7 @@ jobs:
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
             *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
+          workdir: src
 
       - name: Run Tests
         run: |
