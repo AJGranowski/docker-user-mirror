@@ -119,11 +119,29 @@ jobs:
           pip3 install --require-hashes --requirement /tmp/requirements.txt
           rm /tmp/requirements.txt
 
-      - name: Docker Cache
-        id: docker-cache
-        uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0
+      # https://docs.docker.com/build/ci/github-actions/cache/#github-cache
+      - name: Set up Docker CLI
+        id: setup-buildx-action
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
-          key: ${{ matrix.container-context }}-${{ runner.os }}-${{ hashFiles('./images/**/Dockerfile') }}
+          name: ci
+
+      - name: Docker Cache
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: /tmp/buildkit-cache
+          key: buildkit-${{ runner.os }}-${{ hashFiles('./container-images/**') }}
+
+      - name: Build Docker images
+        uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # v6.9.0
+        with:
+          allow: |
+            network.host
+          builder: ${{ steps.setup-buildx-action.outputs.name }}
+          load: true
+          set: |
+            *.cache-from=type=local,src=/tmp/buildkit-cache
+            *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
 
       - name: Run Tests
         run: |
