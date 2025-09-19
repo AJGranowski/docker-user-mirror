@@ -1,27 +1,27 @@
 #!/bin/sh
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities"
 
-IMAGE_NAME="$(pwd | xargs basename)";
-$CONTAINER_ENGINE build -t "$IMAGE_NAME" image/;
-./user-mirror $CONTAINER_ENGINE run --rm -v ./:/docker-user-mirror --volume /docker-user-mirror/volume/ --workdir /docker-user-mirror/ "$IMAGE_NAME" sh -c 'true';
+IMAGE_NAME="$(pwd | xargs basename)"
+$CONTAINER_ENGINE build -t "$IMAGE_NAME" image/
+./user-mirror $CONTAINER_ENGINE run --rm -v ./:/docker-user-mirror --volume /docker-user-mirror/volume/ --workdir /docker-user-mirror/ "$IMAGE_NAME" sh -c 'true'
 
 # Test directory exists
 if ! [ -d volume ]; then
-    printf 'directory "%s" not found\n' 'volume' >&2;
-    exit 1;
+    printf 'directory "%s" not found\n' 'volume' >&2
+    exit 1
 fi
 
 # Test file ownership matches the current user
-directory_owner_uid=$(stat -c "%u" volume);
-directory_owner_gid=$(stat -c "%g" volume);
-user_uid=$(id -u);
-user_gid=$(id -g);
+directory_owner_uid=$(stat -c "%u" volume)
+directory_owner_gid=$(stat -c "%g" volume)
+user_uid=$(id -u)
+user_gid=$(id -g)
 if ! [ $directory_owner_uid -eq $user_uid ]; then
-    printf 'Ownership UID for "volume" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2;
-    exit 1;
+    printf 'Ownership UID for "volume" does not match (expected %s, got %s)\n' $user_uid $directory_owner_uid >&2
+    exit 1
 fi
 if ! [ $directory_owner_gid -eq $user_gid ]; then
-    printf 'Ownership GID for "volume" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2;
-    exit 1;
+    printf 'Ownership GID for "volume" does not match (expected %s, got %s)\n' $user_gid $directory_owner_gid >&2
+    exit 1
 fi

@@ -1,13 +1,13 @@
 #!/bin/sh
-set -eC;
+set -eC
 
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
 
 if command -v shellcheck >/dev/null; then
     (cd "$THIS_SCRIPT_DIR" && \
     grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning && \
-    echo 'Shellcheck passed!');
+    echo 'Shellcheck passed!')
 fi
 
 (cd "$THIS_SCRIPT_DIR" && ./scripts/matrix-images scripts/matrix-test-suite scripts/run-test) && \
-(echo 'All test pass!' || (echo 'Test failure.' >&2 && false));
+(echo 'All test pass!' || (echo 'Test failure.' >&2 && false))

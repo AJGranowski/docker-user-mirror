@@ -1,86 +1,86 @@
 #!/bin/sh
-set -eC;
+set -eC
 
 # Prerequisite check
 if ! command -v realpath >/dev/null; then
-    printf '%s\n' 'realpath command not found' >&2;
-    exit 1;
+    printf '%s\n' 'realpath command not found' >&2
+    exit 1
 fi
 
 if [ ! -f /proc/sys/kernel/random/uuid ]; then
-    printf '%s\n' '/proc/sys/kernel/random/uuid not found' >&2;
-    exit 1;
+    printf '%s\n' '/proc/sys/kernel/random/uuid not found' >&2
+    exit 1
 fi
 
 uuid() {
-    cat /proc/sys/kernel/random/uuid;
+    cat /proc/sys/kernel/random/uuid
 }
 
 # Full path to this script
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/../src")";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+SRC_DIR="$(realpath "$THIS_SCRIPT_DIR/../src")"
 
 # Full path to the test script
-TEST_SCRIPT_PATH="$(realpath "$1")";
-shift;
+TEST_SCRIPT_PATH="$(realpath "$1")"
+shift
 
 if [ -z "$COMPOSE_ENGINE" ]; then
-    COMPOSE_ENGINE="docker compose";
+    COMPOSE_ENGINE="docker compose"
 fi
 
 if [ -z "$DOCKERFILE_PATH" ]; then
-    DOCKERFILE_PATH="$(realpath "$THIS_SCRIPT_DIR/../images/alpine/Dockerfile")";
+    DOCKERFILE_PATH="$(realpath "$THIS_SCRIPT_DIR/../images/alpine/Dockerfile")"
 fi
 
 if [ -z "$TESTING_ENVIRONMENT_DIR" ]; then
-    TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/../bin")";
+    TESTING_ENVIRONMENT_DIR="$(realpath "$THIS_SCRIPT_DIR/../bin")"
 fi
 
 case $COMPOSE_ENGINE in
     docker*)
-        CONTAINER_ENGINE='docker';
+        CONTAINER_ENGINE='docker'
         ;;
     podman*)
-        CONTAINER_ENGINE='podman';
+        CONTAINER_ENGINE='podman'
         ;;
 esac
 
 # Create the test namespace
-test_dir="$TESTING_ENVIRONMENT_DIR/$(uuid)";
-mkdir -p "$test_dir";
+test_dir="$TESTING_ENVIRONMENT_DIR/$(uuid)"
+mkdir -p "$test_dir"
 
 # Create the image build context
-image_dir="$test_dir/image";
-mkdir -p "$image_dir";
-cp "$SRC_DIR/image/Dockerfile.user-mirror" "$image_dir/Dockerfile";
-cp "$DOCKERFILE_PATH" "$image_dir/Dockerfile.base-image";
-printf '\n' >> "$image_dir/Dockerfile.base-image";
-(cd "$image_dir" && sed -i -e '/#{{Dockerfile}}/{r Dockerfile.base-image' -e 'd;}' Dockerfile);
-rm "$image_dir/Dockerfile.base-image";
-cp "$SRC_DIR/image/entrypoint" "$image_dir";
+image_dir="$test_dir/image"
+mkdir -p "$image_dir"
+cp "$SRC_DIR/image/Dockerfile.user-mirror" "$image_dir/Dockerfile"
+cp "$DOCKERFILE_PATH" "$image_dir/Dockerfile.base-image"
+printf '\n' >> "$image_dir/Dockerfile.base-image"
+(cd "$image_dir" && sed -i -e '/#{{Dockerfile}}/{r Dockerfile.base-image' -e 'd;}' Dockerfile)
+rm "$image_dir/Dockerfile.base-image"
+cp "$SRC_DIR/image/entrypoint" "$image_dir"
 
 # Create the image runtime context
-cp "$SRC_DIR/compose.yml" "$test_dir";
-cp "$SRC_DIR/user-mirror" "$test_dir";
+cp "$SRC_DIR/compose.yml" "$test_dir"
+cp "$SRC_DIR/user-mirror" "$test_dir"
 
 # Run the test
-echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $COMPOSE_ENGINE... ($(basename "$test_dir"))";
+echo "[run-test] Running $(basename "$TEST_SCRIPT_PATH") on $(basename "$(dirname "$DOCKERFILE_PATH")") with $COMPOSE_ENGINE... ($(basename "$test_dir"))"
 if (cd "$test_dir" && COMPOSE_ENGINE="$COMPOSE_ENGINE" CONTAINER_ENGINE="$CONTAINER_ENGINE" $TEST_SCRIPT_PATH "$@"); then
-    test_status='success';
+    test_status='success'
 else
-    test_status='failure';
+    test_status='failure'
 fi
 
 # Remove the image
-(cd "$test_dir" && $COMPOSE_ENGINE down --rmi local 2>/dev/null) || true;
-($CONTAINER_ENGINE rm "$(basename "$TEST_SCRIPT_PATH")" 2>/dev/null) || true;
+(cd "$test_dir" && $COMPOSE_ENGINE down --rmi local 2>/dev/null) || true
+($CONTAINER_ENGINE rm "$(basename "$TEST_SCRIPT_PATH")" 2>/dev/null) || true
 
 if [ "$test_status" != 'success' ]; then
-    false;
+    false
 fi
 
 # Remove the test namespace
-rm -rf -- "$test_dir" || sudo rm -rf -- "$test_dir";
+rm -rf -- "$test_dir" || sudo rm -rf -- "$test_dir"
 
 # Remove the test environment if it's empty
-rm -d -- "$TESTING_ENVIRONMENT_DIR" 2>/dev/null || true;
+rm -d -- "$TESTING_ENVIRONMENT_DIR" 2>/dev/null || true
