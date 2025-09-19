@@ -175,7 +175,7 @@ jobs:
     env:
       RELEASE_REGEX: ^release-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
 
-    if: ${{ github.ref == 'refs/heads/main' && needs.check-release-files.outputs.changed == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' && needs.workflow-filter.outputs.run-check-release-files == 'true' }}
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1

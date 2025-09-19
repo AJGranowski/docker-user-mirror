@@ -3,7 +3,7 @@
 # License: MIT
 set -eC
 
-VERSION='development';
+VERSION='development'
 exec 3>/dev/null;
 exec 4>/dev/null;
 
