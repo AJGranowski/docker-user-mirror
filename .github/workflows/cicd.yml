@@ -146,6 +146,7 @@ jobs:
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
             *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
+          source: ./src
           workdir: src
 
       - name: Run Tests
