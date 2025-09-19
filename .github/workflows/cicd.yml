@@ -106,7 +106,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Validate Compose File
-        run: docker compose --file src/compose.yml config --quiet
+        run: docker compose --file compose.yml --file src/compose.yml config --quiet
 
       - name: Use Rootless Docker
         if: ${{ matrix.container-context == 'docker-rootless' }}
@@ -142,16 +142,9 @@ jobs:
             network.host
           builder: ${{ steps.setup-buildx-action.outputs.name }}
           load: true
-          files: |
-            alpine
-            busybox
-            debian
-            ubuntu
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
             *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
-          source: .
-          workdir: ./images
 
       - name: Run Tests
         run: |

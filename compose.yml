@@ -1,0 +1,17 @@
+services:
+  alpine:
+    build:
+      context: images/alpine
+      network: host
+  busybox:
+    build:
+      context: images/busybox
+      network: host
+  debian:
+    build:
+      context: images/debian
+      network: host
+  ubuntu:
+    build:
+      context: images/ubuntu
+      network: host
