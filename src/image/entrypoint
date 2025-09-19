@@ -1,7 +1,7 @@
 #!/bin/sh
 # Source: https://github.com/AJGranowski/docker-user-mirror
 # License: MIT
-set -eC;
+set -eC
 
 VERSION='development';
 exec 3>/dev/null;
