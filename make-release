@@ -21,7 +21,7 @@ fi
 printf "$VERSION" > "$RELEASE_DIR/version"
 
 # Replace VERSION= in the scripts with the release version.
-(cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development';/VERSION='$VERSION';/" *)
+(cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development'/VERSION='$VERSION'/" *)
 if command -v shellcheck >/dev/null; then
     (cd "$RELEASE_DIR" && \
     grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning)
