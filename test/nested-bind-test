@@ -1,8 +1,8 @@
 #!/bin/sh
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities"
 
-mv compose.yml compose1.yml;
+mv compose.yml compose1.yml
 cat <<EOF > compose2.yml
 services:
   sh:
@@ -12,31 +12,31 @@ services:
         target: /docker-user-mirror/.npmrc
 EOF
 
-$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
-rm compose1.yml;
-rm compose2.yml;
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml
+rm compose1.yml
+rm compose2.yml
 
-touch docker.npmrc;
+touch docker.npmrc
 
-$COMPOSE_ENGINE build;
-./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
+$COMPOSE_ENGINE build
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true'
 
 # Test file exists
 if ! [ -f .npmrc ]; then
-    printf 'file "%s" not found\n' '.npmrc' >&2;
-    exit 1;
+    printf 'file "%s" not found\n' '.npmrc' >&2
+    exit 1
 fi
 
 # Test file ownership matches the current user
-file_owner_uid=$(stat -c "%u" .npmrc);
-file_owner_gid=$(stat -c "%g" .npmrc);
-user_uid=$(id -u);
-user_gid=$(id -g);
+file_owner_uid=$(stat -c "%u" .npmrc)
+file_owner_gid=$(stat -c "%g" .npmrc)
+user_uid=$(id -u)
+user_gid=$(id -g)
 if ! [ $file_owner_uid -eq $user_uid ]; then
-    printf 'Ownership UID for ".npmrc" does not match (expected %s, got %s)\n' $user_uid $file_owner_uid >&2;
-    exit 1;
+    printf 'Ownership UID for ".npmrc" does not match (expected %s, got %s)\n' $user_uid $file_owner_uid >&2
+    exit 1
 fi
 if ! [ $file_owner_gid -eq $user_gid ]; then
-    printf 'Ownership GID for ".npmrc" does not match (expected %s, got %s)\n' $user_gid $file_owner_gid >&2;
-    exit 1;
+    printf 'Ownership GID for ".npmrc" does not match (expected %s, got %s)\n' $user_gid $file_owner_gid >&2
+    exit 1
 fi

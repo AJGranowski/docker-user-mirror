@@ -1,13 +1,13 @@
 #!/bin/sh
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities"
 
 # Skip on Podman
 if [ "$CONTAINER_ENGINE" = 'podman' ]; then
-    exit 0;
+    exit 0
 fi
 
-mv compose.yml compose1.yml;
+mv compose.yml compose1.yml
 cat <<EOF > compose2.yml
 services:
   sh:
@@ -26,21 +26,21 @@ services:
           create_host_path: false
 EOF
 
-$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml;
-rm compose1.yml;
-rm compose2.yml;
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml
+rm compose1.yml
+rm compose2.yml
 
-$COMPOSE_ENGINE build;
+$COMPOSE_ENGINE build
 if ./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true' 2>/dev/null; then
-    printf 'Run succeeded when it should have failed (expected failure when do-not-create.file does not exist)' >&2;
-    exit 1;
+    printf 'Run succeeded when it should have failed (expected failure when do-not-create.file does not exist)' >&2
+    exit 1
 fi
 
-mkdir do-not-create;
-./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true';
+mkdir do-not-create
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true'
 
 # Test directory exists
 if ! [ -d create ]; then
-    printf 'directory "%s" not found\n' 'create' >&2;
-    exit 1;
+    printf 'directory "%s" not found\n' 'create' >&2
+    exit 1
 fi

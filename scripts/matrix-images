@@ -1,13 +1,13 @@
 #!/bin/sh
-set -eC;
+set -eC
 
-SCRIPT_PATH="$(realpath "$1")";
-shift;
+SCRIPT_PATH="$(realpath "$1")"
+shift
 
 if [ -n "$DOCKERFILE_PATH" ]; then
-    $SCRIPT_PATH "$@";
+    $SCRIPT_PATH "$@"
 else
     for dockerfile_path in images/*/Dockerfile; do
-        DOCKERFILE_PATH="$dockerfile_path" $SCRIPT_PATH "$@";
+        DOCKERFILE_PATH="$dockerfile_path" $SCRIPT_PATH "$@"
     done
 fi

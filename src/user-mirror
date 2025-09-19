@@ -1,35 +1,35 @@
 #!/bin/sh
 # Source: https://github.com/AJGranowski/docker-user-mirror
 # License: MIT
-set -eC;
-VERSION='development';
+set -eC
+VERSION='development'
 
 # Create container(s) and return the container ID(s).
 container_create() {
     if [ "$COMMAND_TYPE" = 'compose' ]; then
         # For compose commands, we don't need to worry about preserving options when creating containers.
-        search_limit=3;
-        skip_counter=0;
+        search_limit=3
+        skip_counter=0
         for arg do
             if [ "$is_file" = true ]; then
-                unset is_file;
+                unset is_file
                 if [ -z "$compose_configuration_files" ]; then
-                    compose_configuration_files="-f ${arg}";
+                    compose_configuration_files="-f ${arg}"
                 else
-                    compose_configuration_files="${compose_configuration_files} -f ${arg}";
+                    compose_configuration_files="${compose_configuration_files} -f ${arg}"
                 fi
             elif [ "$is_run_command" = true ]; then
                 case "$arg" in
                     -v|--volume)
-                        echo 'Error: This script does not support compose CLI volume arguments.' >&2;
-                        echo '    Rootless Docker will better serve your use case.' >&2;
-                        echo '    https://docs.docker.com/engine/security/rootless/' >&2;
-                        exit 1;
+                        echo 'Error: This script does not support compose CLI volume arguments.' >&2
+                        echo '    Rootless Docker will better serve your use case.' >&2
+                        echo '    https://docs.docker.com/engine/security/rootless/' >&2
+                        exit 1
                         ;;
                 esac
             else
                 if [ "$search_limit" -le 0 ]; then
-                    break;
+                    break
                 fi
 
                 case "$arg" in
@@ -41,34 +41,34 @@ container_create() {
                     -*) : $((search_limit += 2));;
                 esac
 
-                : $((search_limit -= 1));
-                : $((skip_counter += 1));
+                : $((search_limit -= 1))
+                : $((skip_counter += 1))
             fi
         done
 
-        create_all_containers=true;
+        create_all_containers=true
         for arg do
             if [ "$skip_counter" -gt 0 ]; then
-                : $((skip_counter -= 1));
-                continue;
+                : $((skip_counter -= 1))
+                continue
             fi
 
             if [ "$exit_loop" = true ]; then
-                break;
+                break
             fi
 
-            items="$(docker compose config --services)";
+            items="$(docker compose config --services)"
             while read service; do
                 if [ "$arg" = "$service" ]; then
-                    unset create_all_containers;
-                    $COMPOSE_ENGINE --progress quiet $compose_configuration_files create "$service" >/dev/null;
-                    $COMPOSE_ENGINE ps -a --format "{{if eq .Service \"$service\"}}{{.ID}}{{end}}";
+                    unset create_all_containers
+                    $COMPOSE_ENGINE --progress quiet $compose_configuration_files create "$service" >/dev/null
+                    $COMPOSE_ENGINE ps -a --format "{{if eq .Service \"$service\"}}{{.ID}}{{end}}"
 
                     if [ "$is_run_command" = true ]; then
-                        exit_loop=true;
+                        exit_loop=true
                     fi
 
-                    break;
+                    break
                 fi
             done <<EOF
 $items
@@ -76,38 +76,38 @@ EOF
         done
 
         if [ "$create_all_containers" = true ]; then
-            $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null;
-            $COMPOSE_ENGINE ps --status created --format '{{.ID}}';
+            $COMPOSE_ENGINE --progress quiet $compose_configuration_files create >/dev/null
+            $COMPOSE_ENGINE ps --status created --format '{{.ID}}'
         fi
     elif [ "$COMMAND_TYPE" = 'container' ]; then
         # For a non-compose commands, we can just change "exec" and "run" to "create", and then use that new command
         #   to create (but not start) a container for parsing. We're modifying the argument list since that's the only
         #   array supported in POSIX shell.
-        first_iteration=true;
-        index=0;
-        search_for_replace=true;
-        search_limit=3;
+        first_iteration=true
+        index=0
+        search_for_replace=true
+        search_limit=3
         for arg do
             if [ "$first_iteration" = true ]; then
-                unset first_iteration;
-                shift $#;
+                unset first_iteration
+                shift $#
             fi
 
             if [ "$search_for_replace" = true ]; then
                 if [ "$search_limit" -le 0 ]; then
-                    break;
+                    break
                 fi
 
                 case "$arg" in
                     exec|run)
-                        replaced_command="$arg";
-                        replaced_command_index="$index";
-                        set -- "$@" "create";
-                        unset search_for_replace;
+                        replaced_command="$arg"
+                        replaced_command_index="$index"
+                        set -- "$@" "create"
+                        unset search_for_replace
                         ;;
                     create)
-                        set -- "$@" "$arg";
-                        unset search_for_replace;
+                        set -- "$@" "$arg"
+                        unset search_for_replace
                         ;;
                     *) set -- "$@" "$arg";;
                 esac
@@ -116,41 +116,41 @@ EOF
                     -*) : $((search_limit += 2));;
                 esac
 
-                : $((index += 1));
-                : $((search_limit -= 1));
+                : $((index += 1))
+                : $((search_limit -= 1))
             else
-                set -- "$@" "$arg";
+                set -- "$@" "$arg"
             fi
         done
 
         if [ "$search_for_replace" = true ]; then
-            echo '[user-mirror]: Unable to create container.' >&2;
-            exit 1;
+            echo '[user-mirror]: Unable to create container.' >&2
+            exit 1
         fi
 
-        "$@";
+        "$@"
 
         if [ -n "$replaced_command" ] && [ -n "$replaced_command_index" ]; then
-            first_iteration=true;
-            index=0;
+            first_iteration=true
+            index=0
             for arg do
                 if [ "$first_iteration" = true ]; then
-                    unset first_iteration;
-                    shift $#;
+                    unset first_iteration
+                    shift $#
                 fi
 
                 if [ "$index" -eq "$replaced_command_index" ]; then
-                    set -- "$@" "$replaced_command";
+                    set -- "$@" "$replaced_command"
                 else
-                    set -- "$@" "$arg";
+                    set -- "$@" "$arg"
                 fi
 
-                : $((index += 1));
+                : $((index += 1))
             done
         fi
     else
-        printf 'Unknown COMMAND_TYPE state: %s\n' "$COMMAND_TYPE" >&2;
-        exit 1;
+        printf 'Unknown COMMAND_TYPE state: %s\n' "$COMMAND_TYPE" >&2
+        exit 1
     fi
 }
 
@@ -158,18 +158,18 @@ EOF
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
 download_file() {
     if [ $# -eq 3 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/${3}/${1}";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/download/${3}/${1}"
     elif [ $# -eq 2 ]; then
-        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/${1}";
+        curl --fail -Ls -o "$2" "https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/${1}"
     else
-        echo 'Expected at least two arguments.' >&2;
-        return 1;
+        echo 'Expected at least two arguments.' >&2
+        return 1
     fi
 }
 
 # Query GitHub for the latest release tag.
 get_latest_release_tag() {
-    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')";
+    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')"
     case "$(echo "$response" | tail -1)" in
         2*)
             echo "$response" | \
@@ -184,15 +184,13 @@ get_latest_release_tag() {
 # Args: release tag (defaults to latest release it not provided)
 get_release_version() {
     if [ $# -eq 0 ]; then
-        response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')";
+        response="$(curl -Ls -w '\n%{http_code}' 'https://github.com/AJGranowski/docker-user-mirror/releases/latest/download/version')"
     else
-        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")";
+        response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")"
     fi
 
     case "$(echo "$response" | tail -1)" in
-        2*)
-            echo "$response" | head -1
-            ;;
+        2*) echo "$response" | head -1;;
         *) false;;
     esac
 }
@@ -201,54 +199,54 @@ get_release_version() {
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
     # Grab the USER_MIRROR_SERVICE_NAME environment variable if it exists.
-    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")";
+    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")"
 
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
     USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
-$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")";
+$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")"
 
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
-    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")";
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")"
     while read create_path; do
         if [ -z "$create_path" ]; then
-            break;
+            break
         fi
 
-        mkdir -p "$create_path" >/dev/null 2>&1 || true;
+        mkdir -p "$create_path" >/dev/null 2>&1 || true
     done <<EOF
 $items
 EOF
     # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
     #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
-    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")";
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
     while read edge_source; do
         if [ -z "$edge_source" ]; then
-            break;
+            break
         fi
 
-        read edge_destination;
+        read edge_destination
 
-        items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")";
+        items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")"
         while read node_source; do
             if [ -z "$node_source" ]; then
-                break;
+                break
             fi
 
-            read node_destination;
+            read node_destination
 
             # Find replace
-            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")";
+            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")"
 
             if [ "$resolved_node_destination" = "$node_destination" ]; then
                 # Skip this pair if no resolution was made.
-                continue;
+                continue
             fi
 
             if [ -f "$node_source" ]; then
-                mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true;
-                touch "$resolved_node_destination";
+                mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true
+                touch "$resolved_node_destination"
             else
-                mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true;
+                mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true
             fi
         done <<EOF
 $items
@@ -270,40 +268,40 @@ release_tag_exists() {
 # Check for updates, and download the latest version.
 update() {
     if ! latest_version="$(get_release_version)"; then
-        echo 'Unable to fetch the latest version. Try again in a few minutes.' >&2;
-        return 1;
+        echo 'Unable to fetch the latest version. Try again in a few minutes.' >&2
+        return 1
     fi
 
     if [ "$VERSION" = "$latest_version" ]; then
-        echo 'Up to date.';
+        echo 'Up to date.'
     else
         if ! release_tag_exists "$(version_to_release_tag)"; then
-            echo 'Critical update required!';
+            echo 'Critical update required!'
             echo '    This version has been deleted, signaling either a critical bug or vulnerability. Update immediately.'
         else
             echo 'New update available.'
         fi
     fi
 
-    printf '    Current version: %s\n' "$VERSION";
-    printf '    Latest version:  %s\n' "$latest_version";
+    printf '    Current version: %s\n' "$VERSION"
+    printf '    Latest version:  %s\n' "$latest_version"
 
     if [ "$VERSION" = "$latest_version" ]; then
-        return 0;
+        return 0
     fi
 
     if [ "$o_yes" != true ]; then
-        echo '\nInstall the update? (y/n)';
-        read yn;
+        echo '\nInstall the update? (y/n)'
+        read yn
         case "$yn" in
             y*) ;;
             n*) return 0;;
         esac
     fi
 
-    echo 'Installing update...';
-    download_file 'user-mirror' "${0}.tmp";
-    mv "${0}.tmp" "$0" && chmod +x "$0" && printf '%s installed!\n' "$latest_version"; exit 0;
+    echo 'Installing update...'
+    download_file 'user-mirror' "${0}.tmp"
+    mv "${0}.tmp" "$0" && chmod +x "$0" && printf '%s installed!\n' "$latest_version"; exit 0
 }
 
 # Convert "$VERSION" to "release-**" format.
@@ -319,49 +317,49 @@ version_to_release_tag() {
 while [ $# -gt 0 ]; do
     case "$1" in
         --docker)
-            COMPOSE_ENGINE='docker compose';
-            CONTAINER_ENGINE='docker';
+            COMPOSE_ENGINE='docker compose'
+            CONTAINER_ENGINE='docker'
             ;;
         --docker-compose)
-            COMPOSE_ENGINE='docker-compose';
-            CONTAINER_ENGINE='docker';
+            COMPOSE_ENGINE='docker-compose'
+            CONTAINER_ENGINE='docker'
             ;;
         --podman)
-            COMPOSE_ENGINE='podman compose';
-            CONTAINER_ENGINE='podman';
+            COMPOSE_ENGINE='podman compose'
+            CONTAINER_ENGINE='podman'
             ;;
         --podman-compose)
-            COMPOSE_ENGINE='podman-compose';
-            CONTAINER_ENGINE='podman';
+            COMPOSE_ENGINE='podman-compose'
+            CONTAINER_ENGINE='podman'
             ;;
         --update)
-            o_update=true;
+            o_update=true
             ;;
         --version)
-            printf 'Version: %s\n' "$VERSION";
-            exit 0;
+            printf 'Version: %s\n' "$VERSION"
+            exit 0
             ;;
         -y|--yes)
-            o_yes=true;
+            o_yes=true
             ;;
         --)
-            shift;
-            break;
+            shift
+            break
             ;;
         -*)
-            printf 'Unknown option %s\n' "$1" >&2;
-            exit 1;
+            printf 'Unknown option %s\n' "$1" >&2
+            exit 1
             ;;
         *) break;;
     esac
-    shift;
+    shift
 done
 
 if [ "$o_update" = true ]; then
     if update; then
-        exit 0;
+        exit 0
     else
-        exit 1;
+        exit 1
     fi
 fi
 
@@ -369,94 +367,94 @@ fi
 if [ -z "$COMPOSE_ENGINE" ] || [ -z "$CONTAINER_ENGINE" ]; then
     case "$1" in
         docker-compose)
-            COMPOSE_ENGINE='docker-compose';
-            CONTAINER_ENGINE='docker';
+            COMPOSE_ENGINE='docker-compose'
+            CONTAINER_ENGINE='docker'
             ;;
         podman)
-            COMPOSE_ENGINE='podman compose';
-            CONTAINER_ENGINE='podman';
+            COMPOSE_ENGINE='podman compose'
+            CONTAINER_ENGINE='podman'
             ;;
         podman-compose)
-            COMPOSE_ENGINE='podman-compose';
-            CONTAINER_ENGINE='podman';
+            COMPOSE_ENGINE='podman-compose'
+            CONTAINER_ENGINE='podman'
             ;;
         *)
-            COMPOSE_ENGINE='docker compose';
-            CONTAINER_ENGINE='docker';
+            COMPOSE_ENGINE='docker compose'
+            CONTAINER_ENGINE='docker'
             ;;
     esac
 fi
 
 # Duck type the command
-search_limit=2;
+search_limit=2
 for arg do
     if [ "$search_limit" -le 0 ]; then
-        break;
+        break
     fi
 
     case "$arg" in
         compose|up)
-            COMMAND_TYPE='compose';
-            break;
+            COMMAND_TYPE='compose'
+            break
             ;;
         container|create|exec|run)
-            COMMAND_TYPE='container';
-            break;
+            COMMAND_TYPE='container'
+            break
             ;;
         -*) : $((search_limit += 2));;
     esac
 
-    : $((search_limit -= 1));
+    : $((search_limit -= 1))
 done
 
 if [ -z "$COMMAND_TYPE" ]; then
-    echo '[user-mirror]: Unable to parse command. Aborting.' >&2;
-    exit 1;
+    echo '[user-mirror]: Unable to parse command. Aborting.' >&2
+    exit 1
 fi
 
 # If Docker and not rootless, then we have some work to do.
 if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOptions}}' | grep 'rootless' 1>/dev/null; then
-    USER_MIRROR_HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)";
+    USER_MIRROR_HOST_USER="$(id -un):$(id -u):$(id -gn):$(id -g)"
 
     # Loop through the containers created by this command.
-    items="$(container_create "$@")";
+    items="$(container_create "$@")"
     while read temp_container_id; do
         if [ -z "$temp_container_id" ]; then
-            continue;
+            continue
         fi
 
         prepare_environment "$temp_container_id"
 
         # Cleanup.
         if [ "$(docker inspect --format '{{.State.Status}}' "$temp_container_id")" = 'created' ]; then
-            $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null;
+            $CONTAINER_ENGINE container rm "$temp_container_id" >/dev/null
         fi
     done <<EOF
 $items
 EOF
 else
-    USER_MIRROR_HOST_USER='root:0:root:0';
+    USER_MIRROR_HOST_USER='root:0:root:0'
 fi
 
 # Restore the args list we may have mangled before, and insert runtime arguments.
-first_iteration=true;
-search_for_insert=4;
+first_iteration=true
+search_for_insert=4
 for arg do
     if [ "$first_iteration" = true ]; then
-        unset first_iteration;
-        shift $#;
+        unset first_iteration
+        shift $#
     fi
 
     if [ "$search_for_insert" -gt 0 ]; then
         case "$arg" in
             create|exec|run)
-                set -- "$@" "$arg";
-                set -- "$@" '-e' "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}";
+                set -- "$@" "$arg"
+                set -- "$@" '-e' "USER_MIRROR_HOST_USER=${USER_MIRROR_HOST_USER}"
                 if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
-                    set -- "$@" '-e' "USER_MIRROR_CHOWN_LIST=${USER_MIRROR_CHOWN_LIST}";
+                    set -- "$@" '-e' "USER_MIRROR_CHOWN_LIST=${USER_MIRROR_CHOWN_LIST}"
                 fi
 
-                search_for_insert=0;
+                search_for_insert=0
                 ;;
             *) set -- "$@" "$arg";;
         esac
@@ -467,13 +465,13 @@ for arg do
             *) : $((search_for_insert -= 1));;
         esac
     else
-        set -- "$@" "$arg";
+        set -- "$@" "$arg"
     fi
 done
 
-export USER_MIRROR_HOST_USER;
+export USER_MIRROR_HOST_USER
 if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
-    export USER_MIRROR_CHOWN_LIST;
+    export USER_MIRROR_CHOWN_LIST
 fi
 
-exec "$@";
+exec "$@"

@@ -1,10 +1,10 @@
 #!/bin/sh
-THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)";
-. "$THIS_SCRIPT_DIR/../scripts/test-utilities";
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities"
 
-IMAGE_NAME="$(pwd | xargs basename)";
-$CONTAINER_ENGINE build -t "$IMAGE_NAME" image/;
+IMAGE_NAME="$(pwd | xargs basename)"
+$CONTAINER_ENGINE build -t "$IMAGE_NAME" image/
 ./user-mirror $CONTAINER_ENGINE run --volume /mnt/volumes/volume/ --rm "$IMAGE_NAME" sh -c '\
     [ "$(stat -c %u:%g /mnt/volumes/volume/)" = "$(id -u):$(id -g)" ] || \
     (echo "Permissions for /mnt/volumes/volume/ ($(stat -c %u:%g /mnt/volumes/volume/)) != UID:GID ($(id -u):$(id -g))" >&2 && false) \
-    ';
+    '

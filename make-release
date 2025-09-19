@@ -1,30 +1,30 @@
 #!/bin/sh
-set -euC;
+set -euC
 
-RELEASE_DIR="release/";
+RELEASE_DIR="release/"
 
 # Copy the release artifacts to the release directory.
-rm -rf "$RELEASE_DIR";
-mkdir -p "$RELEASE_DIR";
-cp src/user-mirror "$RELEASE_DIR";
-cp src/image/entrypoint "$RELEASE_DIR";
+rm -rf "$RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
+cp src/user-mirror "$RELEASE_DIR"
+cp src/image/entrypoint "$RELEASE_DIR"
 
 # Attempt to set the version based off of the previous "release-x.x.x" tag.
 # Otherwise, just use the current commit.
 if last_release_tag="$(git describe --tags --abbrev=0 --match=release-*)" 2>/dev/null; then
-    VERSION="$(echo "$last_release_tag" | cut -c 9-)-$(git rev-parse --short HEAD)";
+    VERSION="$(echo "$last_release_tag" | cut -c 9-)-$(git rev-parse --short HEAD)"
 else
-    VERSION="$(git rev-parse HEAD)";
+    VERSION="$(git rev-parse HEAD)"
 fi
 
 # Create version file
 printf "$VERSION" > "$RELEASE_DIR/version"
 
 # Replace VERSION= in the scripts with the release version.
-(cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development';/VERSION='$VERSION';/" *);
+(cd "$RELEASE_DIR" && sed -i -e "s/VERSION='development'/VERSION='$VERSION'/" *)
 if command -v shellcheck >/dev/null; then
     (cd "$RELEASE_DIR" && \
-    grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning);
+    grep -e '^#!/bin/sh' --exclude-dir=.git -lR | xargs shellcheck --shell=sh --severity=warning)
 fi
 
-echo "Release $VERSION generated in $RELEASE_DIR";
+echo "Release $VERSION generated in $RELEASE_DIR"
