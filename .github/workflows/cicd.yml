@@ -141,7 +141,6 @@ jobs:
           allow: |
             network.host
           builder: ${{ steps.setup-buildx-action.outputs.name }}
-          files: src/compose.yml
           load: true
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
