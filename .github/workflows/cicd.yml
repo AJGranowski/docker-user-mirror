@@ -141,12 +141,14 @@ jobs:
           allow: |
             network.host
           builder: ${{ steps.setup-buildx-action.outputs.name }}
-          files: compose.yml
+          files: 
+            ./compose.yml
+            src/compose.yml
           load: true
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
             *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
-          workdir: src
+          workdir: ./src
 
       - name: Run Tests
         run: |
