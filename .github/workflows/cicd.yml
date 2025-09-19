@@ -142,11 +142,16 @@ jobs:
             network.host
           builder: ${{ steps.setup-buildx-action.outputs.name }}
           load: true
+          files: |
+            alpine
+            busybox
+            debian
+            ubuntu
           set: |
             *.cache-from=type=local,src=/tmp/buildkit-cache
             *.cache-to=type=local,dest=/tmp/buildkit-cache,mode=max
           source: .
-          workdir: ./src
+          workdir: ./images
 
       - name: Run Tests
         run: |
