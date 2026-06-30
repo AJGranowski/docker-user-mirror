@@ -260,7 +260,7 @@ EOF
         fi
 
         read chown_path
-        ownership="$(stat -c '%g:%u' "$chown_source" 2>/dev/null || echo '')"
+        ownership="$(stat -c '%u:%g' "$chown_source" 2>/dev/null || echo '')"
         USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
 S:$service_name
 O:$ownership
