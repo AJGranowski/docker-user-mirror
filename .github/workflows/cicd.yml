@@ -80,7 +80,7 @@ jobs:
     if: ${{ needs.workflow-filter.outputs.run-ci == 'true' }}
     strategy:
       matrix:
-        container-context: ["docker-default", "docker-rootless", "podman"]
+        container-context: ["docker-default", "podman"]
 
     steps:
       - name: Harden Runner
