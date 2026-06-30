@@ -298,6 +298,10 @@ else
             *) error=1
         esac
 
+        if [ -z "$ownership" ]; then
+            ownership="${host_user_id}:${host_user_gid}"
+        fi
+
         case "$chown_path" in
             P:*) chown_path="${chown_path#P:}";;
             *) error=1
@@ -316,7 +320,7 @@ else
             continue
         fi
 
-        chown -c "${host_user_id}:${host_user_gid}" "$chown_path" >&3
+        chown -c "$ownership" "$chown_path" >&3
     done <<EOF
 $USER_MIRROR_CHOWN_LIST
 EOF
