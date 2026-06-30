@@ -235,6 +235,7 @@ else
     fi
 
     printf 'USER_MIRROR_CAPABILITIES=%s\n' "$USER_MIRROR_CAPABILITIES" >&3
+    printf 'USER_MIRROR_CHOWN_LIST=%s\n' "$USER_MIRROR_CHOWN_LIST" >&3
     printf 'USER_MIRROR_HOST_USER=%s\n' "$USER_MIRROR_HOST_USER" >&3
     printf 'USER_MIRROR_SERVICE_NAME=%s\n' "$USER_MIRROR_SERVICE_NAME" >&3
 
@@ -308,7 +309,8 @@ else
         esac
 
         if [ -n "$error" ]; then
-            printf 'error: invalid chown list object: {%s, %s, %s}\n' "$service_name" >&2; exit 1;;
+            printf 'error: invalid chown list object: [%s, %s, %s]\n' "$service_name" "$ownership" "$chown_path" >&2
+            exit 1
         fi
 
         if [ -n "$service_name" ] && [ "$service_name" != "$USER_MIRROR_SERVICE_NAME" ]; then
