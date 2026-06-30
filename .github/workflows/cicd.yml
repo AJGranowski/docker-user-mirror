@@ -55,11 +55,11 @@ jobs:
               - "!.github/**"
               - ".github/workflows/*.yml"
 
-      - name: Check for \#skip-auto-release
+      - name: Check for !skip-auto-release
         id: commit-comment
         run: |
           case "$(git show -s --format=%b "$GITHUB_REF")" in
-            *#skip-auto-release*) echo 'skip-auto-release=true' >> "$GITHUB_OUTPUT";;
+            *!skip-auto-release*) echo 'skip-auto-release=true' >> "$GITHUB_OUTPUT";;
           esac
 
       - name: Release Source Files Changed
@@ -87,7 +87,7 @@ jobs:
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           disable-sudo: ${{ matrix.container-context == 'docker-default' }}
-          egress-policy: audit
+          egress-policy: block
           allowed-endpoints: >
             auth.docker.io:443
             azure.archive.ubuntu.com:80
