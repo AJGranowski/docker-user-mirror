@@ -198,13 +198,6 @@ get_release_version() {
 # Create host items and populate chown list
 # Args: container ID (retrieved from container_create)
 prepare_environment() {
-    # Grab the USER_MIRROR_SERVICE_NAME environment variable if it exists.
-    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")"
-
-    # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
-    USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
-$($CONTAINER_ENGINE inspect --format "{{range .Mounts}}{{if .RW}}{{println \"${service_name}\"}}{{println .Destination}}{{end}}{{end}}" "$1")"
-
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")"
     while read create_path; do
@@ -252,6 +245,26 @@ EOF
 $items
 EOF
 
+    done <<EOF
+$items
+EOF
+
+    # Grab the USER_MIRROR_SERVICE_NAME environment variable if it exists.
+    service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")"
+
+    # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
+    while read chown_source; do
+        if [ -z "$chown_source" ]; then
+            break
+        fi
+
+        read chown_path
+        ownership="$(stat -c '%g:%u' "$chown_source" 2>/dev/null || echo '')"
+        USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
+S:$service_name
+O:$ownership
+P:$chown_path"
     done <<EOF
 $items
 EOF
