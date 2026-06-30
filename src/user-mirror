@@ -237,7 +237,7 @@ EOF
 
             if [ -f "$node_source" ]; then
                 mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true
-                touch "$resolved_node_destination"
+                touch "$resolved_node_destination" >/dev/null 2>&1 || true
             else
                 mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true
             fi
