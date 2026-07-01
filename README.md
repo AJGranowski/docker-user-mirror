@@ -83,7 +83,7 @@ The big benefit to using this project over [other workarounds](https://github.co
 Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker Compose and Podman Compose (if installed).
 
 This project is full CI/CD. All changes to `main` that satisfy *all* of the following conditions will automatically get released as a new patch version:
-* Changes that do not have `#skip-auto-release` in the commit body.
+* Changes that do not have `!skip-auto-release` in the commit body.
 * Changes that could affect release artifacts.
 * Changes that pass all tests on rootful Docker, rootless Docker, and Podman.
 
