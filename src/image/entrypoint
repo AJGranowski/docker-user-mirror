@@ -235,6 +235,7 @@ else
     fi
 
     printf 'USER_MIRROR_CAPABILITIES=%s\n' "$USER_MIRROR_CAPABILITIES" >&3
+    printf 'USER_MIRROR_CHOWN_LIST=%s\n' "$USER_MIRROR_CHOWN_LIST" >&3
     printf 'USER_MIRROR_HOST_USER=%s\n' "$USER_MIRROR_HOST_USER" >&3
     printf 'USER_MIRROR_SERVICE_NAME=%s\n' "$USER_MIRROR_SERVICE_NAME" >&3
 
@@ -285,13 +286,33 @@ else
             continue
         fi
 
+        read ownership
+        read chown_path
+        unset error
+
         case "$service_name" in
-            /*)
-                chown_path="$service_name"
-                unset service_name
-                ;;
-            *) read chown_path;;
+            S:*) service_name="${service_name#S:}";;
+            *) error=1;;
         esac
+
+        case "$ownership" in
+            O:*) ownership="${ownership#O:}";;
+            *) error=1;;
+        esac
+
+        if [ -z "$ownership" ]; then
+            ownership="${host_user_id}:${host_user_gid}"
+        fi
+
+        case "$chown_path" in
+            P:*) chown_path="${chown_path#P:}";;
+            *) error=1;;
+        esac
+
+        if [ -n "$error" ]; then
+            printf 'error: invalid chown list object: [%s, %s, %s]\n' "$service_name" "$ownership" "$chown_path" >&2
+            exit 1
+        fi
 
         if [ -n "$service_name" ] && [ "$service_name" != "$USER_MIRROR_SERVICE_NAME" ]; then
             continue
@@ -302,7 +323,7 @@ else
             continue
         fi
 
-        chown -c "${host_user_id}:${host_user_gid}" "$chown_path" >&3
+        chown -c "$ownership" "$chown_path" >&3
     done <<EOF
 $USER_MIRROR_CHOWN_LIST
 EOF
