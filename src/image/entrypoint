@@ -288,6 +288,7 @@ else
 
         read ownership
         read chown_path
+        unset error
 
         case "$service_name" in
             S:*) service_name="${service_name#S:}";;
