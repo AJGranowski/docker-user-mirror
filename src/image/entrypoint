@@ -297,7 +297,7 @@ else
 
         case "$ownership" in
             O:*) ownership="${ownership#O:}";;
-            *) error=1
+            *) error=1;;
         esac
 
         if [ -z "$ownership" ]; then
@@ -306,7 +306,7 @@ else
 
         case "$chown_path" in
             P:*) chown_path="${chown_path#P:}";;
-            *) error=1
+            *) error=1;;
         esac
 
         if [ -n "$error" ]; then
