@@ -316,9 +316,9 @@ update() {
 # Convert "$VERSION" to "release-**" format.
 version_to_release_tag() {
     if [ $# -eq 0 ]; then
-        echo "$VERSION" | sed -E 's/([^-]*).*/release-\1/g'
+        echo "$VERSION" | sed 's/\([^-]*\).*/release-\1/g'
     else
-        echo "$1" | sed -E 's/([^-]*).*/release-\1/g'
+        echo "$1" | sed 's/\([^-]*\).*/release-\1/g'
     fi
 }
 
