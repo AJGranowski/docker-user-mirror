@@ -167,19 +167,6 @@ download_file() {
     fi
 }
 
-# Query GitHub for the latest release tag.
-get_latest_release_tag() {
-    response="$(curl -Ls -w '%{http_code}' 'https://api.github.com/repos/AJGranowski/docker-user-mirror/releases/latest')"
-    case "$(echo "$response" | tail -1)" in
-        2*)
-            echo "$response" | \
-            grep -E '^\s*"tag_name":' | \
-            sed -E 's/.*"tag_name": "([^"]+)".*/\1/g'
-        ;;
-        *) false;;
-    esac
-}
-
 # Get the version ID of a release.
 # Args: release tag (defaults to latest release it not provided)
 get_release_version() {
