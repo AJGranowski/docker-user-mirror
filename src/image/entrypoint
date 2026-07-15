@@ -268,13 +268,13 @@ else
     export USER="$host_user_name"
 
     # Set the ownership of a set of items to the user.
-    while read -r service_name; do
+    while IFS= read -r service_name; do
         if [ -z "$service_name" ]; then
             continue
         fi
 
-        read -r ownership
-        read -r chown_path
+        IFS= read -r ownership || break
+        IFS= read -r chown_path || break
         unset error
 
         case "$service_name" in
