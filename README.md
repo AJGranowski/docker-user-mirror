@@ -91,6 +91,7 @@ This project is full CI/CD. All changes to `main` that satisfy *all* of the foll
 
 <h2 align="center">Partner Projects</h2>
 
+* [Preceding Tag Action][preceding-tag-action]
 * [Reddit Expanded Community Filter][reddit-expanded-community-filter-userscript]
 
 [best-practices-badge]: https://www.bestpractices.dev/projects/9502/badge
@@ -98,6 +99,7 @@ This project is full CI/CD. All changes to `main` that satisfy *all* of the foll
 [cicd-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml/badge.svg?branch=main
 [cicd-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml
 [downloads-badge]: https://img.shields.io/github/downloads/AJGranowski/docker-user-mirror/user-mirror?logo=github&label=Total%20downloads&labelColor=30373d&color=4078c0
+[preceding-tag-action]: https://github.com/AJGranowski/preceding-tag-action
 [reddit-expanded-community-filter-userscript]: https://github.com/AJGranowski/reddit-expanded-community-filter-userscript
 [scorecard-badge]: https://api.securityscorecards.dev/projects/github.com/AJGranowski/docker-user-mirror/badge
 [scorecard-link]: https://securityscorecards.dev/viewer/?uri=github.com/AJGranowski/docker-user-mirror
