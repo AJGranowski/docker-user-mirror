@@ -204,7 +204,10 @@ EOF
             break
         fi
 
-        IFS= read -r edge_destination || break
+        IFS= read -r edge_destination || {
+            printf 'Malformed edge_destination\n' >&2
+            return 1
+        }
 
         items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")"
         while IFS= read -r node_source; do
@@ -212,7 +215,10 @@ EOF
                 break
             fi
 
-            IFS= read -r node_destination || break
+            IFS= read -r node_destination || {
+                printf 'Malformed node_destination\n' >&2
+                return 1
+            }
 
             # Find replace
             resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")"
@@ -246,7 +252,11 @@ EOF
             break
         fi
 
-        IFS= read -r chown_path || break
+        IFS= read -r chown_path || {
+            printf 'Malformed chown_path\n' >&2
+            return 1
+        }
+
         ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
         USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
 S:$service_name

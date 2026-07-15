@@ -273,8 +273,16 @@ else
             continue
         fi
 
-        IFS= read -r ownership || break
-        IFS= read -r chown_path || break
+        IFS= read -r ownership || {
+            printf 'Malformed ownership\n' >&2
+            return 1
+        }
+
+        IFS= read -r chown_path || {
+            printf 'Malformed chown_path\n' >&2
+            return 1
+        }
+
         unset error
 
         case "$service_name" in
