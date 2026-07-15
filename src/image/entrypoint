@@ -101,7 +101,7 @@ update() {
 
     if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)'
-        read yn
+        read -r yn
         case "$yn" in
             y*) ;;
             n*) return 0;;
@@ -268,13 +268,21 @@ else
     export USER="$host_user_name"
 
     # Set the ownership of a set of items to the user.
-    while read service_name; do
+    while IFS= read -r service_name; do
         if [ -z "$service_name" ]; then
             continue
         fi
 
-        read ownership
-        read chown_path
+        IFS= read -r ownership || {
+            printf 'Malformed ownership\n' >&2
+            return 1
+        }
+
+        IFS= read -r chown_path || {
+            printf 'Malformed chown_path\n' >&2
+            return 1
+        }
+
         unset error
 
         case "$service_name" in

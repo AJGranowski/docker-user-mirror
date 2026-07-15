@@ -58,7 +58,7 @@ container_create() {
             fi
 
             items="$(docker compose config --services)"
-            while read service; do
+            while IFS= read -r service; do
                 if [ "$arg" = "$service" ]; then
                     unset create_all_containers
                     $COMPOSE_ENGINE --progress quiet $compose_configuration_files create "$service" >/dev/null
@@ -187,7 +187,7 @@ get_release_version() {
 prepare_environment() {
     # Loop through bind mounts that have a non-empty mode (`create_host_path: true` sets this), and mkdir those source paths on the host.
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if and (eq .Type "bind") .Mode}}{{println .Source}}{{end}}{{end}}' "$1")"
-    while read create_path; do
+    while IFS= read -r create_path; do
         if [ -z "$create_path" ]; then
             break
         fi
@@ -199,20 +199,26 @@ EOF
     # Loop though every pair of bind mounts and all mounts to create nested directories and files on the host.
     #   (for example, a volume mount within a bind mount will need to be created on the host relative to the bind mount)
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if eq .Type "bind"}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
-    while read edge_source; do
+    while IFS= read -r edge_source; do
         if [ -z "$edge_source" ]; then
             break
         fi
 
-        read edge_destination
+        IFS= read -r edge_destination || {
+            printf 'Malformed edge_destination\n' >&2
+            return 1
+        }
 
         items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{println .Source}}{{println .Destination}}{{end}}' "$1")"
-        while read node_source; do
+        while IFS= read -r node_source; do
             if [ -z "$node_source" ]; then
                 break
             fi
 
-            read node_destination
+            IFS= read -r node_destination || {
+                printf 'Malformed node_destination\n' >&2
+                return 1
+            }
 
             # Find replace
             resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")"
@@ -241,12 +247,16 @@ EOF
 
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
     items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
-    while read chown_source; do
+    while IFS= read -r chown_source; do
         if [ -z "$chown_source" ]; then
             break
         fi
 
-        read chown_path
+        IFS= read -r chown_path || {
+            printf 'Malformed chown_path\n' >&2
+            return 1
+        }
+
         ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
         USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
 S:$service_name
@@ -301,7 +311,7 @@ update() {
 
     if [ "$o_yes" != true ]; then
         echo '\nInstall the update? (y/n)'
-        read yn
+        read -r yn
         case "$yn" in
             y*) ;;
             n*) return 0;;
@@ -427,7 +437,7 @@ if [ "$CONTAINER_ENGINE" = "docker" ] && ! docker info -f '{{println .SecurityOp
 
     # Loop through the containers created by this command.
     items="$(container_create "$@")"
-    while read temp_container_id; do
+    while IFS= read -r temp_container_id; do
         if [ -z "$temp_container_id" ]; then
             continue
         fi

@@ -26,7 +26,7 @@ docker compose build
 ## Getting Started
 1. Copy the `entrypoint` script to the directory of your Dockerfile.
 2. Copy the `user-mirror` script to the root of your project.
-3. Append `Dockerfile.user-mirror` to your project's Dockerfile.
+3. Append the contents of `Dockerfile.user-mirror` to your project's Dockerfile.
 4. Add `cap_add`, `cap_drop`, and `environment` from `compose.yml` to your project's compose file.
 5. Prepend your project's compose entrypoint with `[/entrypoint, --,` ...
 
@@ -79,6 +79,37 @@ uid=0(root) gid=0(root) groups=0(root)
 
 The big benefit to using this project over [other workarounds](https://github.com/moby/moby/issues/2259) is that it's all automatic. The file ownership fixes are all inferred directly from your command or compose specification.
 
+## Usage
+Ensure both `user-mirror` and `entrypoint` are the same version. Things are likely to break if they're out of sync.
+
+### `user-mirror`
+
+`./user-mirror [...options] [--] command`
+
+You can rename this script to whatever best fits your project.
+
+##### Options:
+* `--docker`: Use `docker` and `docker compose` rather than inferring from the arguments.
+* `--docker-compose`: Use `docker` and `docker-compose` rather than inferring from the arguments.
+* `--podman`: Use `podman` and `podman compose` rather than inferring from the arguments.
+* `--podman-compose`: Use `podman` and `podman-compose` rather than inferring from the arguments.
+* `--update`: Check for updates. Pass `-y` or `--yes` to install updates without prompting.
+* `--version`: Print the version of this script.
+* `--`: Stop parsing `user-mirror` options.
+
+### `entrypoint`
+
+`./entrypoint [...options] [--] command`
+
+You can rename this script to whatever best fits your project.
+
+##### Options:
+* `--setup`: Use this option in your Dockerfile to install requisite tools into the container's image at build time.
+* `--update`: Check for updates. Pass `-y` or `--yes` to install updates without prompting.
+* `--version`: Print the version of this script.
+* `--verbose`: Print extra debugging output to stout and sterr.
+* `--`: Stop parsing `entrypoint` options.
+
 ## Development
 Run `ci` to run the test scripts in `test/` with the images in `images/` using both Docker Compose and Podman Compose (if installed).
 
@@ -91,6 +122,7 @@ This project is full CI/CD. All changes to `main` that satisfy *all* of the foll
 
 <h2 align="center">Partner Projects</h2>
 
+* [Preceding Tag Action][preceding-tag-action]
 * [Reddit Expanded Community Filter][reddit-expanded-community-filter-userscript]
 
 [best-practices-badge]: https://www.bestpractices.dev/projects/9502/badge
@@ -98,6 +130,7 @@ This project is full CI/CD. All changes to `main` that satisfy *all* of the foll
 [cicd-badge]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml/badge.svg?branch=main
 [cicd-link]: https://github.com/AJGranowski/docker-user-mirror/actions/workflows/cicd.yml
 [downloads-badge]: https://img.shields.io/github/downloads/AJGranowski/docker-user-mirror/user-mirror?logo=github&label=Total%20downloads&labelColor=30373d&color=4078c0
+[preceding-tag-action]: https://github.com/AJGranowski/preceding-tag-action
 [reddit-expanded-community-filter-userscript]: https://github.com/AJGranowski/reddit-expanded-community-filter-userscript
 [scorecard-badge]: https://api.securityscorecards.dev/projects/github.com/AJGranowski/docker-user-mirror/badge
 [scorecard-link]: https://securityscorecards.dev/viewer/?uri=github.com/AJGranowski/docker-user-mirror
