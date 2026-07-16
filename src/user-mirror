@@ -57,7 +57,7 @@ container_create() {
                 break
             fi
 
-            items="$($COMPOSE_ENGINE config --services)"
+            items="$($COMPOSE_ENGINE $compose_configuration_files config --services)"
             while IFS= read -r service; do
                 if [ "$arg" = "$service" ]; then
                     unset create_all_containers
