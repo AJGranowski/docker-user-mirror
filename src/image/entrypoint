@@ -275,12 +275,12 @@ else
 
         IFS= read -r ownership || {
             printf 'Malformed ownership\n' >&2
-            return 1
+            exit 1
         }
 
         IFS= read -r chown_path || {
             printf 'Malformed chown_path\n' >&2
-            return 1
+            exit 1
         }
 
         unset error
