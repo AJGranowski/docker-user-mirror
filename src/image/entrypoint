@@ -100,7 +100,7 @@ update() {
     fi
 
     if [ "$o_yes" != true ]; then
-        echo '\nInstall the update? (y/n)'
+        printf '\nInstall the update? (y/n)\n'
         read -r yn
         case "$yn" in
             y*) ;;
