@@ -20,7 +20,7 @@ check_setpriv() {
 }
 
 # Split strings by a delimiter and extract an index. Uses space as a delimiter by default.
-extract_index() (
+extract_index() {
     str="$1"
     count="${2:-0}"
     delimiter="${3:- }"
@@ -32,7 +32,7 @@ extract_index() (
         esac
     done
     echo "${str%%${delimiter}*}"
-)
+}
 
 # Download a release file.
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
