@@ -57,7 +57,7 @@ container_create() {
                 break
             fi
 
-            items="$(docker compose config --services)"
+            items="$($COMPOSE_ENGINE config --services)"
             while IFS= read -r service; do
                 if [ "$arg" = "$service" ]; then
                     unset create_all_containers
