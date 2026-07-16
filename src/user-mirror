@@ -220,13 +220,13 @@ EOF
                 return 1
             }
 
-            # Find replace
-            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")"
+            printf 'example:\n%s\n%s\n%s\n%s\n' "$edge_source" "$edge_destination" "$node_source" "$node_destination"
 
-            if [ "$resolved_node_destination" = "$node_destination" ]; then
-                # Skip this pair if no resolution was made.
-                continue
-            fi
+            # Find replace
+            case "$node_destination" in
+                "${edge_destination}/"*) resolved_node_destination="${edge_source}/${node_destination#"${edge_destination}/"}";;
+                *) continue;; # Skip this pair if no resolution was made.
+            esac
 
             if [ -f "$node_source" ]; then
                 mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true
