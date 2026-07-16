@@ -21,17 +21,19 @@ check_setpriv() {
 
 # Split strings by a delimiter and extract an index. Uses space as a delimiter by default.
 extract_index() {
-    str="$1"
-    count="${2:-0}"
-    delimiter="${3:- }"
-    while [ "$count" -gt 0 ]; do
-        : $((count -= 1))
-        case "$str" in
-            *${delimiter}*) str="${str#*"$delimiter"}";;
-            *) str='';;
-        esac
-    done
-    echo "${str%%${delimiter}*}"
+    (
+        str="$1"
+        count="${2:-0}"
+        delimiter="${3:- }"
+        while [ "$count" -gt 0 ]; do
+            : $((count -= 1))
+            case "$str" in
+                *"$delimiter"*) str="${str#*"$delimiter"}" ;;
+                *) str='' ;;
+            esac
+        done
+        printf '%s\n' "${str%%"$delimiter"*}"
+    )
 }
 
 # Download a release file.
