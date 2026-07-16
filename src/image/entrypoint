@@ -56,8 +56,8 @@ get_release_version() {
         response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")"
     fi
 
-    case "$(echo "$response" | tail -1)" in
-        2*) echo "$response" | head -1;;
+    case "$(echo "$response" | tail -n 1)" in
+        2*) echo "$response" | head -n 1;;
         *) false;;
     esac
 }
