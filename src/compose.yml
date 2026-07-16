@@ -13,7 +13,6 @@ services:
       - CAP_DAC_OVERRIDE # Needed for Podman.
 
     cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
     entrypoint: [/entrypoint, --, sh]
     environment:
       USER_MIRROR_CAPABILITIES: # setpriv --bounding-set options. Must be a subset of cap_add. See https://www.man7.org/linux/man-pages/man1/setpriv.1.html#OPTIONS
