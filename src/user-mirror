@@ -314,7 +314,7 @@ update() {
         read -r yn
         case "$yn" in
             y*) ;;
-            n*) return 0;;
+            *) return 0;;
         esac
     fi
 
