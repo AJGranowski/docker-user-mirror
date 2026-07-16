@@ -1,0 +1,39 @@
+#!/bin/sh
+THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
+. "$THIS_SCRIPT_DIR/../scripts/test-utilities"
+
+# Skip on Podman
+if [ "$CONTAINER_ENGINE" = 'podman' ]; then
+    exit 0
+fi
+
+mv compose.yml compose1.yml
+cat <<EOF > compose2.yml
+services:
+  sh:
+    volumes:
+      - type: bind
+        source: ./dot-directory
+        target: /docker.user.mirror
+        bind:
+          create_host_path: true
+      - type: volume
+        source: volume
+        target: /docker-user-mirror/volume
+volumes:
+  volume:
+EOF
+
+$COMPOSE_ENGINE -f compose1.yml -f compose2.yml config > compose.yml
+rm compose1.yml
+rm compose2.yml
+
+$COMPOSE_ENGINE build
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'true' 2>/dev/null
+
+# /docker-user-mirror/volume should only match ./:/docker-user-mirror NOT ./dot-directory:/docker.user.mirror
+# Fail if it does, and it creates a new directory in ./dot-directory:/docker.user.mirror
+if [ -d './dot-directory/volume' ]; then
+    printf 'Created directory on the wrong path (/docker.user.mirror instead of /docker-user-mirror)\n' >&2
+    exit 1
+fi
