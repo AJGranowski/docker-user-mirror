@@ -27,7 +27,7 @@ extract_index() {
     while [ "$count" -gt 0 ]; do
         : $((count -= 1))
         case "$str" in
-            *${delimiter}*) str="${str#*${delimiter}}";;
+            *${delimiter}*) str="${str#*"$delimiter"}";;
             *) str='';;
         esac
     done
