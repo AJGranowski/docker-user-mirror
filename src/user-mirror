@@ -220,8 +220,6 @@ EOF
                 return 1
             }
 
-            printf 'example:\n%s\n%s\n%s\n%s\n' "$edge_source" "$edge_destination" "$node_source" "$node_destination"
-
             # Find replace
             case "$node_destination" in
                 "${edge_destination}/"*) resolved_node_destination="${edge_source}/${node_destination#"${edge_destination}/"}";;
