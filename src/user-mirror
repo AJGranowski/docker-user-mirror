@@ -351,6 +351,9 @@ while [ $# -gt 0 ]; do
             COMPOSE_ENGINE='podman-compose'
             CONTAINER_ENGINE='podman'
             ;;
+        --print-env)
+            o_print_env=true
+            ;;
         --update)
             o_update=true
             ;;
@@ -491,6 +494,11 @@ done
 export USER_MIRROR_HOST_USER
 if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
     export USER_MIRROR_CHOWN_LIST
+fi
+
+if [ "$o_print_env" = true ]; then
+    printf 'USER_MIRROR_HOST_USER="%s"\nUSER_MIRROR_CHOWN_LIST="%s"\n' "$USER_MIRROR_HOST_USER" "$USER_MIRROR_CHOWN_LIST"
+    exit 0
 fi
 
 exec "$@"
