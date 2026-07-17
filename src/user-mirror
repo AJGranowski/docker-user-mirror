@@ -258,10 +258,10 @@ EOF
         }
 
         ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
-        USER_MIRROR_CHOWN_LIST="$USER_MIRROR_CHOWN_LIST
-S:$service_name
-O:$ownership
-P:$chown_path"
+        USER_MIRROR_CHOWN_LIST="${USER_MIRROR_CHOWN_LIST}${USER_MIRROR_CHOWN_LIST:+
+}S:${service_name}
+O:${ownership}
+P:${chown_path}"
     done <<EOF
 $items
 EOF
