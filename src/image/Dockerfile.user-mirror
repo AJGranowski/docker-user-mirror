@@ -3,6 +3,6 @@
 COPY entrypoint /entrypoint
 ARG GOSU_VERSION=1.19
 ARG SETPRIV_VERSION=2.42.1
-ARG UTIL_LINUX_VERSION=2.41.3
+ARG UTIL_LINUX_VERSION=2.41
 RUN chmod +x /entrypoint && /entrypoint --setup --verbose
 ENTRYPOINT ["/entrypoint", "--"]
