@@ -298,6 +298,8 @@ else
         esac
 
         if [ -z "$ownership" ]; then
+            continue
+        elif [ "$ownership" = 'CONTAINER_USER' ]; then
             ownership="${host_user_id}:${host_user_gid}"
         fi
 

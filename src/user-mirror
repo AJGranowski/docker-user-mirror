@@ -246,18 +246,27 @@ EOF
     service_name="$($CONTAINER_ENGINE inspect --format '{{range .Config.Env}}{{if and (gt (len .) 25) (eq (slice . 0 25) "USER_MIRROR_SERVICE_NAME=")}}{{slice . 25}}{{end}}{{end}}' "$1")"
 
     # Create a list of all read/write mount destinations so they can be chown'd in the container at runtime.
-    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
-    while IFS= read -r chown_source; do
-        if [ -z "$chown_source" ]; then
+    items="$($CONTAINER_ENGINE inspect --format '{{range .Mounts}}{{if .RW}}{{println .Type}}{{println .Source}}{{println .Destination}}{{end}}{{end}}' "$1")"
+    while IFS= read -r mount_type; do
+        if [ -z "$mount_type" ]; then
             break
         fi
+
+        IFS= read -r chown_source || {
+            printf 'Malformed chown_source\n' >&2
+            return 1
+        }
 
         IFS= read -r chown_path || {
             printf 'Malformed chown_path\n' >&2
             return 1
         }
 
-        ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
+        if [ "$mount_type" = 'volume' ]; then
+            ownership='CONTAINER_USER'
+        else
+            ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
+        fi
         USER_MIRROR_CHOWN_LIST="${USER_MIRROR_CHOWN_LIST}${USER_MIRROR_CHOWN_LIST:+
 }S:${service_name}
 O:${ownership}
@@ -497,7 +506,7 @@ if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
 fi
 
 if [ "$o_print_env" = true ]; then
-    printf 'USER_MIRROR_HOST_USER="%s"\nUSER_MIRROR_CHOWN_LIST="%s"\n' "$USER_MIRROR_HOST_USER" "$USER_MIRROR_CHOWN_LIST"
+    printf "USER_MIRROR_HOST_USER='%s'\nUSER_MIRROR_CHOWN_LIST='%s'\n" "$USER_MIRROR_HOST_USER" "$USER_MIRROR_CHOWN_LIST"
     exit 0
 fi
 
