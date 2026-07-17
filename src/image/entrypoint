@@ -20,19 +20,21 @@ check_setpriv() {
 }
 
 # Split strings by a delimiter and extract an index. Uses space as a delimiter by default.
-extract_index() (
-    str="$1"
-    count="${2:-0}"
-    delimiter="${3:- }"
-    while [ "$count" -gt 0 ]; do
-        : $((count -= 1))
-        case "$str" in
-            *${delimiter}*) str="${str#*${delimiter}}";;
-            *) str='';;
-        esac
-    done
-    echo "${str%%${delimiter}*}"
-)
+extract_index() {
+    (
+        str="$1"
+        count="${2:-0}"
+        delimiter="${3:- }"
+        while [ "$count" -gt 0 ]; do
+            : $((count -= 1))
+            case "$str" in
+                *"$delimiter"*) str="${str#*"$delimiter"}" ;;
+                *) str='' ;;
+            esac
+        done
+        printf '%s\n' "${str%%"$delimiter"*}"
+    )
+}
 
 # Download a release file.
 # Args: release filename, output filename, release tag (defaults to latest release it not provided)
@@ -56,8 +58,8 @@ get_release_version() {
         response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")"
     fi
 
-    case "$(echo "$response" | tail -1)" in
-        2*) echo "$response" | head -1;;
+    case "$(echo "$response" | tail -n 1)" in
+        2*) echo "$response" | head -n 1;;
         *) false;;
     esac
 }
@@ -100,11 +102,11 @@ update() {
     fi
 
     if [ "$o_yes" != true ]; then
-        echo '\nInstall the update? (y/n)'
+        printf '\nInstall the update? (y/n)\n'
         read -r yn
         case "$yn" in
             y*) ;;
-            n*) return 0;;
+            *) return 0;;
         esac
     fi
 
@@ -275,12 +277,12 @@ else
 
         IFS= read -r ownership || {
             printf 'Malformed ownership\n' >&2
-            return 1
+            exit 1
         }
 
         IFS= read -r chown_path || {
             printf 'Malformed chown_path\n' >&2
-            return 1
+            exit 1
         }
 
         unset error

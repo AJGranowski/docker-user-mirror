@@ -57,7 +57,7 @@ container_create() {
                 break
             fi
 
-            items="$(docker compose config --services)"
+            items="$($COMPOSE_ENGINE $compose_configuration_files config --services)"
             while IFS= read -r service; do
                 if [ "$arg" = "$service" ]; then
                     unset create_all_containers
@@ -176,8 +176,8 @@ get_release_version() {
         response="$(curl -Ls -w '\n%{http_code}' "https://github.com/AJGranowski/docker-user-mirror/releases/download/${1}/version")"
     fi
 
-    case "$(echo "$response" | tail -1)" in
-        2*) echo "$response" | head -1;;
+    case "$(echo "$response" | tail -n 1)" in
+        2*) echo "$response" | head -n 1;;
         *) false;;
     esac
 }
@@ -221,17 +221,17 @@ EOF
             }
 
             # Find replace
-            resolved_node_destination="$(echo "$node_destination" | sed -e "s|^${edge_destination}/|${edge_source}/|g")"
-
-            if [ "$resolved_node_destination" = "$node_destination" ]; then
-                # Skip this pair if no resolution was made.
-                continue
-            fi
+            case "$node_destination" in
+                "${edge_destination}/"*) resolved_node_destination="${edge_source}/${node_destination#"${edge_destination}/"}";;
+                *) continue;; # Skip this pair if no resolution was made.
+            esac
 
             if [ -f "$node_source" ]; then
                 mkdir -p "$(dirname "$resolved_node_destination")" >/dev/null 2>&1 || true
                 touch "$resolved_node_destination" >/dev/null 2>&1 || true
             else
+                # The vast majority of mounts are directories, not files.
+                # Assume paths that don't exist on the host are intended as directories.
                 mkdir -p "$resolved_node_destination" >/dev/null 2>&1 || true
             fi
         done <<EOF
@@ -310,11 +310,11 @@ update() {
     fi
 
     if [ "$o_yes" != true ]; then
-        echo '\nInstall the update? (y/n)'
+        printf '\nInstall the update? (y/n)\n'
         read -r yn
         case "$yn" in
             y*) ;;
-            n*) return 0;;
+            *) return 0;;
         esac
     fi
 
