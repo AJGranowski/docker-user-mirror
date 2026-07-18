@@ -506,7 +506,11 @@ if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
 fi
 
 if [ "$o_print_env" = true ]; then
-    printf "USER_MIRROR_HOST_USER='%s'\nUSER_MIRROR_CHOWN_LIST='%s'\n" "$USER_MIRROR_HOST_USER" "$USER_MIRROR_CHOWN_LIST"
+    printf "USER_MIRROR_HOST_USER='%s'\n" "$USER_MIRROR_HOST_USER"
+    if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
+        printf "USER_MIRROR_CHOWN_LIST='%s'\n" "$USER_MIRROR_CHOWN_LIST"
+    fi
+
     exit 0
 fi
 
