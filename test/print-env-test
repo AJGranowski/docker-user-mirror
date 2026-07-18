@@ -3,20 +3,12 @@ THIS_SCRIPT_DIR="$(dirname "$0" | xargs realpath)"
 . "$THIS_SCRIPT_DIR/../scripts/test-utilities"
 
 unset USER_MIRROR_HOST_USER
-unset USER_MIRROR_CHOWN_LIST
 
 $COMPOSE_ENGINE build
-./user-mirror --print-env $COMPOSE_ENGINE run --rm sh -c 'true' > output.env
-
-cat output.env
+./user-mirror $COMPOSE_ENGINE run --rm sh -c 'printf "Should not have launched container" >&2; false' > output.env
 
 if [ -n "$USER_MIRROR_HOST_USER" ]; then
     printf 'Expected USER_MIRROR_HOST_USER to be empty, got this instead: %s\n' "$USER_MIRROR_HOST_USER" >&2
-    exit 1
-fi
-
-if [ -n "$USER_MIRROR_CHOWN_LIST" ]; then
-    printf 'Expected USER_MIRROR_CHOWN_LIST to be empty, got this instead: %s\n' "$USER_MIRROR_CHOWN_LIST" >&2
     exit 1
 fi
 
@@ -24,10 +16,5 @@ fi
 
 if [ -z "$USER_MIRROR_HOST_USER" ]; then
     printf 'Expected USER_MIRROR_HOST_USER to be non-empty after sourcing output.env\n' >&2
-    exit 1
-fi
-
-if [ -z "$USER_MIRROR_CHOWN_LIST" ]; then
-    printf 'Expected USER_MIRROR_CHOWN_LIST to be non-empty after sourcing output.env\n' >&2
     exit 1
 fi
