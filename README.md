@@ -93,6 +93,7 @@ You can rename this script to whatever best fits your project.
 * `--docker-compose`: Use `docker` and `docker-compose` rather than inferring from the arguments.
 * `--podman`: Use `podman` and `podman compose` rather than inferring from the arguments.
 * `--podman-compose`: Use `podman` and `podman-compose` rather than inferring from the arguments.
+* `--print-env`: Stop just before execution and print environment variables to standard output in `.env` format. (`./user-mirror --print-env docker compose up > .env`)
 * `--update`: Check for updates. Pass `-y` or `--yes` to install updates without prompting.
 * `--version`: Print the version of this script.
 * `--`: Stop parsing `user-mirror` options.
