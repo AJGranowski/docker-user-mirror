@@ -263,7 +263,7 @@ EOF
         }
 
         if [ "$mount_type" = 'bind' ]; then
-            ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
+            ownership="$(stat2 '%u:%g' "$chown_source")"
         else
             ownership='CONTAINER_USER'
         fi
