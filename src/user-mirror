@@ -262,11 +262,12 @@ EOF
             return 1
         }
 
-        if [ "$mount_type" = 'volume' ]; then
-            ownership='CONTAINER_USER'
-        else
+        if [ "$mount_type" = 'bind' ]; then
             ownership="$(stat2 '%u:%g' "$chown_source" 2>/dev/null || echo '')"
+        else
+            ownership='CONTAINER_USER'
         fi
+
         USER_MIRROR_CHOWN_LIST="${USER_MIRROR_CHOWN_LIST}${USER_MIRROR_CHOWN_LIST:+
 }S:${service_name}
 O:${ownership}
