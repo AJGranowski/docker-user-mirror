@@ -195,7 +195,7 @@ jobs:
 
     - name: Get Preceding Release Tag
       id: preceding-tag
-      uses: AJGranowski/preceding-tag-action@b308dd34c1a6ee88036f08cb40de4e0ceade1077 # v1.2.2
+      uses: AJGranowski/preceding-tag-action@efde4bddc63fde7406e4683d89d475f1e61ad929 # v1.2.3
       with:
         regex: ${{ env.RELEASE_REGEX }}
 
