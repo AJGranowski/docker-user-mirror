@@ -2,7 +2,6 @@ services:
   sh:
     build:
       context: ./image
-      network: host
 
     cap_add:
       # Minimum permissions for Docker User Mirror entrypoint:
